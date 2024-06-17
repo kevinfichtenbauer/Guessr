@@ -156,7 +156,7 @@ private void CheckLetter()
             currentStatusMessage = $"Du hast den Buchstaben '{guessedLetter}' bereits geraten.";
         }
 
-        if (guessedLetters.Count == currentWord.Distinct().Count())
+        if (GuessesContainWord(currentWord, guessedLetters))
         {
             gameWon = true;
             score += 10; // Punkte für einen gewonnenen Spiel erhöhen
@@ -176,7 +176,13 @@ private void CheckLetter()
     }
     currentGuess = "";
 }
-
+private bool GuessesContainWord(string currentWord, List<char> guessedLetters) {
+    foreach (var letter in currentWord) {
+        if (!this.guessedLetters.Contains(letter))
+            return false;
+    }
+    return true;
+}
 private void GiveUp()
 {
     gameStarted = false;
