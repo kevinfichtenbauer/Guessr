@@ -131,50 +131,42 @@ private string GetRandomWord(string theme)
 
 private void CheckLetter()
 {
-    if (!string.IsNullOrEmpty(currentGuess) && currentGuess.Length == 1)
-    {
-        char guessedLetter = char.ToUpper(currentGuess[0]);
-        if (!guessedLetters.Contains(guessedLetter))
-        {
-            guessedLetters.Add(guessedLetter);
-            if (currentWord.Contains(guessedLetter))
-            {
-                // Hier die Logik für den Fall, dass der Buchstabe im Wort enthalten ist
-                currentStatusMessage = $"Gut geraten! Der Buchstabe '{guessedLetter}' ist im Wort enthalten.";
-                score += 3;
+    if(!gameWon) {
+        if (!string.IsNullOrEmpty(currentGuess) && currentGuess.Length == 1) {
+            char guessedLetter = char.ToUpper(currentGuess[0]);
+            if (!guessedLetters.Contains(guessedLetter)) {
+                guessedLetters.Add(guessedLetter);
+                if (currentWord.Contains(guessedLetter)) {
+                    currentStatusMessage = $"Gut geraten! Der Buchstabe '{guessedLetter}' ist im Wort enthalten.";
+                    score += 3;
+                }
+                else {
+                    currentStatusMessage = $"Leider falsch. Der Buchstabe '{guessedLetter}' ist nicht im Wort enthalten.";
+                    attemptsLeft--;
+                    score -= 1;
+                }
             }
-            else
-            {
-                // Hier die Logik für den Fall, dass der Buchstabe nicht im Wort enthalten ist
-                currentStatusMessage = $"Leider falsch. Der Buchstabe '{guessedLetter}' ist nicht im Wort enthalten.";
-                attemptsLeft--;
-                score -= 1;
+            else {
+                currentStatusMessage = $"Du hast den Buchstaben '{guessedLetter}' bereits geraten.";
+            }
+
+            if (GuessesContainWord(currentWord, guessedLetters)) {
+                gameWon = true;
+                score += 10;
+                timer?.Dispose();
+            }
+
+            if (attemptsLeft == 0) {
+                gameLost = true;
+                score -= 5;
+                timer?.Dispose();
             }
         }
-        else
-        {
-            currentStatusMessage = $"Du hast den Buchstaben '{guessedLetter}' bereits geraten.";
+        else {
+            currentStatusMessage = "Bitte gib einen einzelnen Buchstaben ein.";
         }
-
-        if (GuessesContainWord(currentWord, guessedLetters))
-        {
-            gameWon = true;
-            score += 10; // Punkte für einen gewonnenen Spiel erhöhen
-            timer?.Dispose();
-        }
-
-        if (attemptsLeft == 0)
-        {
-            gameLost = true;
-            score -= 5; // Punkte für ein verlorenes Spiel abziehen
-            timer?.Dispose();
-        }
+        currentGuess = "";
     }
-    else
-    {
-        currentStatusMessage = "Bitte gib einen einzelnen Buchstaben ein.";
-    }
-    currentGuess = "";
 }
 private bool GuessesContainWord(string currentWord, List<char> guessedLetters) {
     foreach (var letter in currentWord) {
