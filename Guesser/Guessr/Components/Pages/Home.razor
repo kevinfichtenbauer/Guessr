@@ -80,6 +80,289 @@
     }
 </div>
 
+@code {
+    public bool gameStarted = false;
+    public string selectedTheme = "";
+    public string currentWord = "";
+    public List<char> guessedLetters = new List<char>();
+    public string currentGuess = "";
+    public string currentStatusMessage = "";
+    public bool timeMode = false;
+    public int remainingTime = 60; // Zeit in Sekunden (kann angepasst werden)
+    public List<string> themes = new List<string> { "Tiere", "Berufe", "Länder", "Filme" };
+    public int maxAttempts = 6; // Maximale Anzahl von Versuchen
+
+    public bool gameWon = false;
+    public bool gameLost = false;
+    public int attemptsLeft;
+
+    public string playerName = "Spieler"; // Beispielname, kann angepasst werden
+    public int score = 0;
+
+    public Timer timer;
+    public int elapsedTime;
+
+    public void StartGame()
+    {
+        if (!string.IsNullOrEmpty(selectedTheme))
+        {
+            // Hier kannst du die Logik für die Wortauswahl je nach Thema implementieren
+            currentWord = GetRandomWord(selectedTheme).ToUpper(); // Wort in Großbuchstaben für einfache Vergleiche
+            gameStarted = true;
+            currentStatusMessage = "";
+            guessedLetters.Clear();
+            currentGuess = "";
+            attemptsLeft = maxAttempts;
+            gameWon = false;
+            gameLost = false;
+            elapsedTime = 0;
+            timer?.Dispose();
+            timer = new Timer(TimerTick, null, 1000, 1000);
+
+            if (timeMode)
+            {
+                remainingTime = 60; // Setze die Zeit zurück oder starte den Timer
+            }
+        }
+    }
+
+    public string GetRandomWord(string theme)
+    {
+        // Hier müsstest du die Implementierung für die Auswahl eines zufälligen Wortes je nach Thema einfügen
+        // Dies könnte von einem externen Service oder einer statischen Liste kommen
+        // Beispiel:
+        if (theme == "Tiere")
+        {
+            return "HUND"; // Hier ein zufälliges Wort für das Thema Tiere
+        }
+        else if (theme == "Berufe")
+        {
+            return "ARZT"; // Hier ein zufälliges Wort für das Thema Berufe
+        }
+
+        // Weitere Themen hinzufügen...
+        return "";
+    }
+
+    public void CheckLetter()
+    {
+        if (!gameWon)
+        {
+            if (!string.IsNullOrEmpty(currentGuess) && currentGuess.Length == 1)
+            {
+                char guessedLetter = char.ToUpper(currentGuess[0]);
+                if (!guessedLetters.Contains(guessedLetter))
+                {
+                    guessedLetters.Add(guessedLetter);
+                    if (currentWord.Contains(guessedLetter))
+                    {
+                        currentStatusMessage = $"Gut geraten! Der Buchstabe '{guessedLetter}' ist im Wort enthalten.";
+                        score += 3;
+                    }
+                    else
+                    {
+                        currentStatusMessage = $"Leider falsch. Der Buchstabe '{guessedLetter}' ist nicht im Wort enthalten.";
+                        attemptsLeft--;
+                        score -= 1;
+                    }
+                }
+                else
+                {
+                    currentStatusMessage = $"Du hast den Buchstaben '{guessedLetter}' bereits geraten.";
+                }
+
+                if (GuessesContainWord(currentWord, guessedLetters))
+                {
+                    gameWon = true;
+                    score += 10;
+                    timer?.Dispose();
+                }
+
+                if (attemptsLeft == 0)
+                {
+                    gameLost = true;
+                    score -= 5;
+                    timer?.Dispose();
+                }
+            }
+            else
+            {
+                currentStatusMessage = "Bitte gib einen einzelnen Buchstaben ein.";
+            }
+
+            currentGuess = "";
+        }
+    }
+
+    public bool GuessesContainWord(string currentWord, List<char> guessedLetters)
+    {
+        foreach (var letter in currentWord)
+        {
+            if (!this.guessedLetters.Contains(letter))
+                return false;
+        }
+
+        return true;
+    }
+
+    public void GiveUp()
+    {
+        gameStarted = false;
+        selectedTheme = "";
+        currentWord = "";
+        guessedLetters.Clear();
+        currentGuess = "";
+        currentStatusMessage = "";
+        gameWon = false;
+        gameLost = false;
+        timer?.Dispose();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        // Hier könntest du zusätzliche Initialisierungslogik einfügen, wenn benötigt
+    }
+
+    public string GetHangmanDisplay(int attemptsLeft)
+    {
+        string[] hangmanStages = new string[]
+        {
+            @"
+  +---+
+  |   |
+      |
+      |
+      |
+      |
+=========",
+            @"
+  +---+
+  |   |
+  O   |
+      |
+      |
+      |
+=========",
+            @"
+  +---+
+  |   |
+  O   |
+  |   |
+      |
+      |
+=========",
+            @"
+  +---+
+  |   |
+  O   |
+ /|   |
+      |
+      |
+=========",
+            @"
+  +---+
+  |   |
+  O   |
+ /|\  |
+      |
+      |
+=========",
+            @"
+  +---+
+  |   |
+  O   |
+ /|\  |
+ /    |
+      |
+=========",
+            @"
+  +---+
+  |   |
+  O   |
+ /|\  |
+ / \  |
+      |
+========="
+        };
+
+        return hangmanStages[maxAttempts - attemptsLeft];
+    }
+
+    public void TimerTick(object state)
+    {
+        elapsedTime++;
+        InvokeAsync(StateHasChanged);
+    }
+
+// Hier könntest du zusätzliche Methoden für die Implementierung des Zeitmodus und anpassbarer Einstellungen hinzufügen
+}
+<h3>Hangman Game</h3>
+
+<div style="display: flex; justify-content: space-between;">
+    <div>
+        <strong>Name:</strong> @playerName
+    </div>
+    <div>
+        <strong>Score:</strong> @score
+    </div>
+</div>
+
+<div>
+    <strong>Timer:</strong> @elapsedTime
+</div>
+
+@if (!gameStarted)
+{
+    <div>
+        <label for="themeSelect">Thema auswählen:</label>
+        <select id="themeSelect" @bind="selectedTheme">
+            @foreach (var theme in themes)
+            {
+                <option value="@theme">@theme</option>
+            }
+        </select>
+        <button @onclick="StartGame">Spiel starten</button>
+    </div>
+}
+else
+{
+    <div>
+        <h4>Thema: @selectedTheme</h4>
+        <p>
+            @foreach (char letter in currentWord.ToCharArray())
+            {
+                if (guessedLetters.Contains(letter))
+                {
+                    <span>@letter</span>
+                }
+                else
+                {
+                    <span>_ </span>
+                }
+            }
+        </p>
+        <p>Erratene Buchstaben: @string.Join(", ", guessedLetters)</p>
+        <input type="text" @bind="currentGuess" maxlength="1"/>
+        <button @onclick="CheckLetter">Buchstabe raten</button>
+        <button @onclick="GiveUp">Aufgeben</button>
+        <p>@currentStatusMessage</p>
+        @if (timeMode)
+        {
+            <p>Verbleibende Zeit: @remainingTime seconds</p>
+        }
+        @if (gameWon)
+        {
+            <p>Congratulations! Du hast das Wort richtig geraten: @currentWord</p>
+        }
+        @if (gameLost)
+        {
+            <p>Game Over! Das geheime Wort war: @currentWord</p>
+        }
+        <pre>@GetHangmanDisplay(attemptsLeft)</pre>
+    </div>
+}
+
 
 
 
