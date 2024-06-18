@@ -32,3 +32,9 @@ public class SYTB:Words{ }
 public class SYTE:Words{ }
 public class NWTK:Words{ }
 public class ITP:Words{ }
+
+public class GroupedTheme
+{
+    public string Subject { get; set; }
+    public List<Words> Words { get; set; }
+}

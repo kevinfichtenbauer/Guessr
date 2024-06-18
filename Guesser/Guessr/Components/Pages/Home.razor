@@ -1,23 +1,10 @@
-﻿@page "/"
+﻿@page "/hangman"
 @using Model.Configurations
 @using Model.Entities
-@code{
-
-    public List<string> GetHangmanDisplay()
-    {
-        List<string> hangmans = new List<string>()
-        {
-            "0.png","1.png","2.png","3.png","4.png","5.png","6.png"
-        };
-        
-<div>
-    @foreach (var hangman in GetHangmanDisplay())
-    {
-        <img src="hangmans/@hangman" alt="hm"/>
-    }
-</div>
+@rendermode InteractiveServer
 
 @code {
+    public GuessrContext _context = new GuessrContext();
     public bool gameStarted = false;
     public string selectedTheme = "";
     public string currentWord = "";
@@ -26,7 +13,7 @@
     public string currentStatusMessage = "";
     public bool timeMode = false;
     public int remainingTime = 60; // Zeit in Sekunden (kann angepasst werden)
-    public List<string> themes = new List<string> { "Tiere", "Berufe", "Länder", "Filme" };
+    public List<string> themes = new List<string>();
     public int maxAttempts = 6; // Maximale Anzahl von Versuchen
 
     public bool gameWon = false;
@@ -39,12 +26,17 @@
     public Timer timer;
     public int elapsedTime;
 
+    public IQueryable<GroupedTheme> Grouped()
+    {
+        return _context.GetThemesSeperated();
+    }
+
     public void StartGame()
     {
         if (!string.IsNullOrEmpty(selectedTheme))
         {
             // Hier kannst du die Logik für die Wortauswahl je nach Thema implementieren
-            currentWord = GetRandomWord(selectedTheme).ToUpper(); // Wort in Großbuchstaben für einfache Vergleiche
+            currentWord = GetRandomWord().ToUpper(); // Wort in Großbuchstaben für einfache Vergleiche
             gameStarted = true;
             currentStatusMessage = "";
             guessedLetters.Clear();
@@ -55,7 +47,6 @@
             elapsedTime = 0;
             timer?.Dispose();
             timer = new Timer(TimerTick, null, 1000, 1000);
-
             if (timeMode)
             {
                 remainingTime = 60; // Setze die Zeit zurück oder starte den Timer
@@ -63,22 +54,13 @@
         }
     }
 
-    public string GetRandomWord(string theme)
+    public string GetRandomWord()
     {
-        // Hier müsstest du die Implementierung für die Auswahl eines zufälligen Wortes je nach Thema einfügen
-        // Dies könnte von einem externen Service oder einer statischen Liste kommen
-        // Beispiel:
-        if (theme == "Tiere")
-        {
-            return "HUND"; // Hier ein zufälliges Wort für das Thema Tiere
-        }
-        else if (theme == "Berufe")
-        {
-            return "ARZT"; // Hier ein zufälliges Wort für das Thema Berufe
-        }
-
-        // Weitere Themen hinzufügen...
-        return "";
+        List<Words> words = _context.GetWords(selectedTheme);
+        Random rnd = new Random();
+        int i = rnd.Next(0, words.Count-1);
+        string _currentWord = words[i].Word;
+        return _currentWord;
     }
 
     public void CheckLetter()
@@ -138,7 +120,6 @@
             if (!this.guessedLetters.Contains(letter))
                 return false;
         }
-
         return true;
     }
 
@@ -163,67 +144,13 @@
 
     public string GetHangmanDisplay(int attemptsLeft)
     {
-        string[] hangmanStages = new string[]
+        List<string> hangmans = new List<string>()
         {
-            @"
-  +---+
-  |   |
-      |
-      |
-      |
-      |
-=========",
-            @"
-  +---+
-  |   |
-  O   |
-      |
-      |
-      |
-=========",
-            @"
-  +---+
-  |   |
-  O   |
-  |   |
-      |
-      |
-=========",
-            @"
-  +---+
-  |   |
-  O   |
- /|   |
-      |
-      |
-=========",
-            @"
-  +---+
-  |   |
-  O   |
- /|\  |
-      |
-      |
-=========",
-            @"
-  +---+
-  |   |
-  O   |
- /|\  |
- /    |
-      |
-=========",
-            @"
-  +---+
-  |   |
-  O   |
- /|\  |
- / \  |
-      |
-========="
+            "0.png", "1.png", "2.png", "3.png", "4.png", "5.png", "6.png"
         };
-
-        return hangmanStages[maxAttempts - attemptsLeft];
+        if(attemptsLeft!=null)
+            return hangmans[maxAttempts - attemptsLeft];
+        return "no picture";
     }
 
     public void TimerTick(object state)
@@ -234,6 +161,7 @@
 
 // Hier könntest du zusätzliche Methoden für die Implementierung des Zeitmodus und anpassbarer Einstellungen hinzufügen
 }
+
 <h3>Hangman Game</h3>
 
 <div style="display: flex; justify-content: space-between;">
@@ -248,15 +176,21 @@
 <div>
     <strong>Timer:</strong> @elapsedTime
 </div>
+@code{
+    private void UpdateSelectedTheme(ChangeEventArgs e)
+    {
+        selectedTheme = e.Value.ToString();
+    }
+}
 
 @if (!gameStarted)
 {
     <div>
         <label for="themeSelect">Thema auswählen:</label>
-        <select id="themeSelect" @bind="selectedTheme">
-            @foreach (var theme in themes)
+        <select id="themeSelect" @onchange="UpdateSelectedTheme">
+            @foreach (var theme in _context.GetThemesSeperated())
             {
-                <option value="@theme">@theme</option>
+                <option value="@theme.Subject">@theme.Subject</option>
             }
         </select>
         <button @onclick="StartGame">Spiel starten</button>
@@ -279,7 +213,7 @@ else
                 }
             }
         </p>
-        <p>Erratene Buchstaben: @string.Join(", ", guessedLetters)</p>
+        <p>Verwendete Buchstaben: @string.Join(", ", guessedLetters)</p>
         <input type="text" @bind="currentGuess" maxlength="1"/>
         <button @onclick="CheckLetter">Buchstabe raten</button>
         <button @onclick="GiveUp">Aufgeben</button>
@@ -296,11 +230,10 @@ else
         {
             <p>Game Over! Das geheime Wort war: @currentWord</p>
         }
-        <pre>@GetHangmanDisplay(attemptsLeft)</pre>
+        <img src="hangmans/@GetHangmanDisplay(attemptsLeft)"/>
     </div>
 }
-
-
-
-
-
+@foreach (var word in _context.GetWords(selectedTheme))
+{
+    <div>@word.Word</div>
+}
