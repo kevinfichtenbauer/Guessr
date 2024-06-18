@@ -5,7 +5,10 @@
 
     public List<string> GetHangmanDisplay()
     {
-        
+        List<string> hangmans = new List<string>()
+        {
+            "0.png","1.png","2.png","3.png","4.png","5.png","6.png"
+        };
         List<string> hangmanStages = new List<string>()
         {
             @"
@@ -65,7 +68,7 @@
       |
 ========="
         };
-        return hangmanStages;
+        return hangmans;
     }
 
 }
@@ -73,7 +76,7 @@
 <div>
     @foreach (var hangman in GetHangmanDisplay())
     {
-        <textarea>@hangman</textarea>
+        <img src="hangmans/@hangman" alt="hm"/>
     }
 </div>
 
