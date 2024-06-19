@@ -3,6 +3,7 @@
 @using Model.Entities
 @rendermode InteractiveServer
 @inject SharedClass SharedService
+@inject NavigationManager manager
 
 <h3>Hangman Game</h3>
 
@@ -218,8 +219,14 @@ else
         return !string.IsNullOrEmpty(selectedTheme);
     }
 
+    public void BackToStart()
+    {
+        manager.NavigateTo("/",true);
+    }
+
 // Hier könntest du zusätzliche Methoden für die Implementierung des Zeitmodus und anpassbarer Einstellungen hinzufügen
 }
+
 @foreach (var word in _context.GetWords(selectedTheme))
 {
     <div>@word.Word</div>

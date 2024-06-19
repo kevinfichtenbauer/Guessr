@@ -53,21 +53,20 @@ public class GuessrContext:DbContext
 
     public void SaveNormalScore(User user)
     {
-        if (Users.Contains(user))
+        var existingUser = Users.FirstOrDefault(u => u.Name == user.Name);
+
+        if (existingUser != null)
         {
-            foreach (var x in Users)
+            if (existingUser.HighScore < user.HighScore)
             {
-                if (x.Name == user.Name)
-                {
-                    if (x.HighScore < user.HighScore)
-                        x.HighScore = user.HighScore;
-                }
+                existingUser.HighScore = user.HighScore;
             }
         }
         else
         {
             Users.Add(new User() { Name = user.Name, HighScore = user.HighScore });
         }
+
         this.SaveChanges();
     }
 }
