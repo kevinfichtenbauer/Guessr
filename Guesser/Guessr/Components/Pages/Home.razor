@@ -188,6 +188,7 @@
     <div>
         <label for="themeSelect">Thema auswählen:</label>
         <select id="themeSelect" @onchange="UpdateSelectedTheme">
+            <option class="text-muted">Fach auswählen</option>
             @foreach (var theme in _context.GetThemesSeperated())
             {
                 <option value="@theme.Subject">@theme.Subject</option>
