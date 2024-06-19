@@ -1,12 +1,71 @@
 ﻿@page "/"
+@using Model.Entities
 @rendermode InteractiveServer
+@inject SharedClass SharedService
+@inject NavigationManager manager
+@inject IJSRuntime JS
 <div id="main-container">
     <div id="content">
         <h3>Login</h3>
         <p>Melden sie sich an, um Hangman spielen zu können</p>
-        <button class="button" onclick="">Anmelden</button>
+        <input class="text-dark" type="text" @bind="SharedService.SharedUser.Name"/>
+        <br/>
+          <!--<label for="modes">Modus wählen:</label>-->
+        <select class="text-dark" name="modes" id="modes" @onchange="UpdateMode">
+            <option class="text-dark">Modus wählen</option>
+            <option class="text-dark" value="Normal">Normal</option>
+            <option class="text-dark" value="Time">Time</option>
+        </select>
+        <button class="button" @onclick="NavigateHome">Anmelden</button>
     </div>
 </div>
+<style>
+
+</style>
+
+
 @code {
-    
+
+    private async Task NavigateHome()
+    {
+        if (string.IsNullOrWhiteSpace(SharedService.SharedUser.Name))
+        {
+            await Alert();
+        }
+        else
+        {
+            if (SharedService.GameMode == EGameMode.Normal)
+            {
+                manager.NavigateTo("/NormalMode");
+            }
+            else if (SharedService.GameMode == EGameMode.Time)
+            {
+                manager.NavigateTo("/TimeMode");
+            }
+        }
+
+        
+    }
+
+    private async Task Alert()
+    {
+        await JS.InvokeVoidAsync("showAlert", "Bitte geben Sie einen Namen ein.");
+    }
+
+    private void UpdateMode(ChangeEventArgs e)
+    {
+        if (e.Value.ToString() == "Time")
+        {
+            SharedService.GameMode = EGameMode.Time;
+        }
+        else if (e.Value.ToString() == "Normal")
+        {
+            SharedService.GameMode = EGameMode.Normal;
+        }
+    }
 }
+<script>
+    window.showAlert= function (message){
+        alert(message)
+    }
+</script>

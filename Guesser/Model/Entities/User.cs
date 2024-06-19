@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.JavaScript;
 using Microsoft.EntityFrameworkCore;
 
 namespace Model.Entities;
@@ -42,4 +43,10 @@ public class GroupedTheme
 {
     public string Subject { get; set; }
     public List<Words> Words { get; set; }
+}
+public enum EGameMode{Normal,Time,none}
+public class SharedClass
+{
+    public User SharedUser { get; set; } = new User(){Name = ""};
+    public EGameMode GameMode { get; set; } = EGameMode.none;
 }
