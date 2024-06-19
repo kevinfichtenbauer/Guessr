@@ -37,7 +37,6 @@ public class GuessrContext:DbContext
     {
         return Users.ToList();
     }
-
     public IQueryable<GroupedTheme> GetThemesSeperated()
     {
         IQueryable<GroupedTheme> groupedThemes =
@@ -50,14 +49,14 @@ public class GuessrContext:DbContext
                 });
         return groupedThemes;
     }
-
     public List<Words> GetWords(string subject)
     {
         return this.DBWords.Where(s => EF.Property<string>(s, "SUBJECT") == subject).ToList();
     }
-    
-    public void RegisterUser(User user)
+    public void UpdateScore(User user)
     {
-        
+        var _user = this.Users.SingleOrDefault(u => u.UID == user.UID);
+        _user.HighScore = user.HighScore;
+        SaveChanges();
     }
 }

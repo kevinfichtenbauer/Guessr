@@ -7,22 +7,15 @@
 
 <div style="display: flex; justify-content: space-between;">
     <div>
-        <strong>Name:</strong> @playerName
+        <strong>Name:</strong> @CurrentUser.Name
     </div>
     <div>
         <strong>Score:</strong> @score
     </div>
 </div>
-
 <div>
     <strong>Timer:</strong> @remainingTime seconds
 </div>
-@code{
-    private void UpdateSelectedTheme(ChangeEventArgs e)
-    {
-        selectedTheme = e.Value.ToString();
-    }
-}
 @if (!gameStarted)
 {
     <div>
@@ -70,16 +63,19 @@ else
         @if (gameWon)
         {
             <p>Congratulations! Du hast das Wort richtig geraten: @currentWord</p>
+            _context.UpdateScore(CurrentUser);
         }
         @if (gameLost)
         {
             <p>Game Over! Das geheime Wort war: @currentWord</p>
+            _context.UpdateScore(CurrentUser);
         }
         <img src="hangmans/@GetHangmanDisplay(attemptsLeft)"/>
     </div>
 }
 
 @code {
+    public User CurrentUser = new User(){Name = "User1"}; 
     public GuessrContext _context = new GuessrContext();
     public bool gameStarted = false;
     public string selectedTheme = "";
@@ -102,11 +98,15 @@ else
     public Timer timer;
     public int elapsedTime;
 
-    public IQueryable<GroupedTheme> Grouped()
+    /*public IQueryable<GroupedTheme> Grouped()
     {
         return _context.GetThemesSeperated();
+    }*/
+    
+    private void UpdateSelectedTheme(ChangeEventArgs e)
+    {
+        selectedTheme = e.Value.ToString();
     }
-
     public void StartGame()
     {
         if (!string.IsNullOrEmpty(selectedTheme) && remainingTime > 0)
@@ -229,8 +229,6 @@ else
         {
             return hangmanImages[index];
         }
-        /*if(attemptsLeft!=null)
-            return hangmans[maxAttempts - attemptsLeft];*/
         return hangmanImages[0]; // Default image if index is out of bounds
     }
 
