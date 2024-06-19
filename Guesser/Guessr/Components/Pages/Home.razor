@@ -2,6 +2,7 @@
 @using Model.Configurations
 @using Model.Entities
 @rendermode InteractiveServer
+<<<<<<< Updated upstream
 
 <h3>Hangman Game</h3>
 
@@ -13,6 +14,8 @@
         <strong>Score:</strong> @score
     </div>
 </div>
+=======
+>>>>>>> Stashed changes
 
 <div>
     <strong>Timer:</strong> @remainingTime seconds
@@ -99,6 +102,10 @@ else
     {
         if (!string.IsNullOrEmpty(selectedTheme) && remainingTime > 0)
         {
+<<<<<<< Updated upstream
+=======
+// Hier kannst du die Logik für die Wortauswahl je nach Thema implementieren
+>>>>>>> Stashed changes
             currentWord = GetRandomWord(selectedTheme).ToUpper(); // Wort in Großbuchstaben für einfache Vergleiche
             gameStarted = true;
             currentStatusMessage = "";
@@ -116,6 +123,12 @@ else
 
     public string GetRandomWord(string theme)
     {
+<<<<<<< Updated upstream
+=======
+// Hier müsstest du die Implementierung für die Auswahl eines zufälligen Wortes je nach Thema einfügen
+// Dies könnte von einem externen Service oder einer statischen Liste kommen
+// Beispiel:
+>>>>>>> Stashed changes
         if (theme == "Tiere")
         {
             return "HUND";
@@ -124,7 +137,12 @@ else
         {
             return "ARZT";
         }
+<<<<<<< Updated upstream
         // Weitere Themen hinzufügen...
+=======
+
+// Weitere Themen hinzufügen...
+>>>>>>> Stashed changes
         return "";
     }
 
@@ -207,71 +225,26 @@ else
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+<<<<<<< Updated upstream
+=======
+// Hier könntest du zusätzliche Initialisierungslogik einfügen, wenn benötigt
+>>>>>>> Stashed changes
     }
 
     public string GetHangmanDisplay(int attemptsLeft)
     {
-        string[] hangmanStages = new string[]
+        List<string> hangmanImages = new List<string>()
         {
-            @"
-  +---+
-  |   |
-      |
-      |
-      |
-      |
-=========",
-            @"
-  +---+
-  |   |
-  O   |
-      |
-      |
-      |
-=========",
-            @"
-  +---+
-  |   |
-  O   |
-  |   |
-      |
-      |
-=========",
-            @"
-  +---+
-  |   |
-  O   |
- /|   |
-      |
-      |
-=========",
-            @"
-  +---+
-  |   |
-  O   |
- /|\  |
-      |
-      |
-=========",
-            @"
-  +---+
-  |   |
-  O   |
- /|\  |
- /    |
-      |
-=========",
-            @"
-  +---+
-  |   |
-  O   |
- /|\  |
- / \  |
-      |
-========="
+            "0.png", "1.png", "2.png", "3.png", "4.png", "5.png", "6.png"
         };
 
-        return hangmanStages[maxAttempts - attemptsLeft];
+        int index = maxAttempts - attemptsLeft;
+        if (index >= 0 && index < hangmanImages.Count)
+        {
+            return hangmanImages[index];
+        }
+
+        return hangmanImages[0]; // Default image if index is out of bounds
     }
 
     public void TimerTick(object state)
@@ -295,3 +268,69 @@ else
         return !string.IsNullOrEmpty(selectedTheme) && remainingTime > 0;
     }
 }
+<<<<<<< Updated upstream
+=======
+
+<h3>Hangman Game</h3>
+<div style="display: flex; justify-content: space-between;">
+    <div>
+        <strong>Name:</strong> @playerName
+    </div>
+    <div>
+        <strong>Score:</strong> @score
+    </div>
+</div>
+<div>
+    <strong>Timer:</strong> @elapsedTime
+</div>
+@if (!gameStarted)
+{
+    <div>
+        <label for="themeSelect">Thema auswählen:</label>
+        <select id="themeSelect" @bind="selectedTheme">
+            @foreach (var theme in themes)
+            {
+                <option value="@theme">@theme</option>
+            }
+        </select>
+        <button @onclick="StartGame">Spiel starten</button>
+    </div>
+}
+else
+{
+    <div>
+        <h4>Thema: @selectedTheme</h4>
+        <p>
+            @foreach (char letter in currentWord.ToCharArray())
+            {
+                if (guessedLetters.Contains(letter))
+                {
+                    <span>@letter</span>
+                }
+                else
+                {
+                    <span>_ </span>
+                }
+            }
+        </p>
+        <p>Erratene Buchstaben: @string.Join(", ", guessedLetters)</p>
+        <input type="text" @bind="currentGuess" maxlength="1"/>
+        <button @onclick="CheckLetter">Buchstabe raten</button>
+        <button @onclick="GiveUp">Aufgeben</button>
+        <p>@currentStatusMessage</p>
+        @if (timeMode)
+        {
+            <p>Verbleibende Zeit: @remainingTime seconds</p>
+        }
+        @if (gameWon)
+        {
+            <p>Congratulations! Du hast das Wort richtig geraten: @currentWord</p>
+        }
+        @if (gameLost)
+        {
+            <p>Game Over! Das geheime Wort war: @currentWord</p>
+        }
+        <img src="hangmans/@GetHangmanDisplay(attemptsLeft)" alt="hm"/>
+    </div>
+}
+>>>>>>> Stashed changes
