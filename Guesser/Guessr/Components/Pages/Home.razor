@@ -74,6 +74,7 @@ else
 }
 
 @code {
+    public GuessrContext _context = new GuessrContext();
     public bool gameStarted = false;
     public string selectedTheme = "";
     public string currentWord = "";
@@ -82,7 +83,7 @@ else
     public string currentStatusMessage = "";
     public bool timeMode = false;
     public int remainingTime = 60; // Zeit in Sekunden (kann angepasst werden)
-    public List<string> themes = new List<string> { "Tiere", "Berufe", "Länder", "Filme" };
+    public List<string> themes = new List<string>();
     public int maxAttempts = 6; // Maximale Anzahl von Versuchen
 
     public bool gameWon = false;
@@ -95,11 +96,17 @@ else
     public Timer timer;
     public int elapsedTime;
 
+    public IQueryable<GroupedTheme> Grouped()
+    {
+        return _context.GetThemesSeperated();
+    }
+
     public void StartGame()
     {
         if (!string.IsNullOrEmpty(selectedTheme) && remainingTime > 0)
         {
-            currentWord = GetRandomWord(selectedTheme).ToUpper(); // Wort in Großbuchstaben für einfache Vergleiche
+            // Hier kannst du die Logik für die Wortauswahl je nach Thema implementieren
+            currentWord = GetRandomWord().ToUpper(); // Wort in Großbuchstaben für einfache Vergleiche
             gameStarted = true;
             currentStatusMessage = "";
             guessedLetters.Clear();
@@ -114,17 +121,13 @@ else
         }
     }
 
-    public string GetRandomWord(string theme)
+    public string GetRandomWord()
     {
-        if (theme == "Tiere")
-        {
-            return "HUND";
-        }
-        else if (theme == "Berufe")
-        {
-            return "ARZT";
-        }
-        return "";
+        List<Words> words = _context.GetWords(selectedTheme);
+        Random rnd = new Random();
+        int i = rnd.Next(0, words.Count-1);
+        string _currentWord = words[i].Word;
+        return _currentWord;
     }
 
     public void CheckLetter()
@@ -220,7 +223,8 @@ else
         {
             return hangmanImages[index];
         }
-
+        /*if(attemptsLeft!=null)
+            return hangmans[maxAttempts - attemptsLeft];*/
         return hangmanImages[0]; // Default image if index is out of bounds
     }
 
@@ -244,4 +248,83 @@ else
     {
         return !string.IsNullOrEmpty(selectedTheme) && remainingTime > 0;
     }
+
+// Hier könntest du zusätzliche Methoden für die Implementierung des Zeitmodus und anpassbarer Einstellungen hinzufügen
+}
+
+<h3>Hangman Game</h3>
+
+<div style="display: flex; justify-content: space-between;">
+    <div>
+        <strong>Name:</strong> @playerName
+    </div>
+    <div>
+        <strong>Score:</strong> @score
+    </div>
+</div>
+
+<div>
+    <strong>Timer:</strong> @elapsedTime
+</div>
+@code{
+    private void UpdateSelectedTheme(ChangeEventArgs e)
+    {
+        selectedTheme = e.Value.ToString();
+    }
+}
+
+@if (!gameStarted)
+{
+    <div>
+        <label for="themeSelect">Thema auswählen:</label>
+        <select id="themeSelect" @onchange="UpdateSelectedTheme">
+            <option class="text-muted">Fach auswählen</option>
+            @foreach (var theme in _context.GetThemesSeperated())
+            {
+                <option value="@theme.Subject">@theme.Subject</option>
+            }
+        </select>
+        <button @onclick="StartGame">Spiel starten</button>
+    </div>
+}
+else
+{
+    <div>
+        <h4>Thema: @selectedTheme</h4>
+        <p>
+            @foreach (char letter in currentWord.ToCharArray())
+            {
+                if (guessedLetters.Contains(letter))
+                {
+                    <span>@letter</span>
+                }
+                else
+                {
+                    <span>_ </span>
+                }
+            }
+        </p>
+        <p>Verwendete Buchstaben: @string.Join(", ", guessedLetters)</p>
+        <input type="text" @bind="currentGuess" maxlength="1"/>
+        <button @onclick="CheckLetter">Buchstabe raten</button>
+        <button @onclick="GiveUp">Aufgeben</button>
+        <p>@currentStatusMessage</p>
+        @if (timeMode)
+        {
+            <p>Verbleibende Zeit: @remainingTime seconds</p>
+        }
+        @if (gameWon)
+        {
+            <p>Congratulations! Du hast das Wort richtig geraten: @currentWord</p>
+        }
+        @if (gameLost)
+        {
+            <p>Game Over! Das geheime Wort war: @currentWord</p>
+        }
+        <img src="hangmans/@GetHangmanDisplay(attemptsLeft)"/>
+    </div>
+}
+@foreach (var word in _context.GetWords(selectedTheme))
+{
+    <div>@word.Word</div>
 }
