@@ -6,7 +6,9 @@ namespace Model.Configurations;
 public class GuessrContext:DbContext
 {
     public DbSet<User> Users { get; set; }
-    public List<User> ListUsers { get; set; }
+    public DbSet<Words> DBWords { get; set; }
+    public List<string> Subjects { get; set; }
+    public List<Words> WordList { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.Entity<Words>()
@@ -18,6 +20,9 @@ public class GuessrContext:DbContext
             .HasValue<SYTE>("SYTE")
             .HasValue<NWTK>("NWTK")
             .HasValue<ITP>("ITP");
+        builder.Entity<Words>()
+            .Property(s => s.Difficulty)
+            .HasConversion<string>();
     }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
         
@@ -27,9 +32,31 @@ public class GuessrContext:DbContext
             new MySqlServerVersion(new Version(8, 0, 29))
         );
     }
-
+    //user switchen
     public List<User> GetUsers()
     {
         return Users.ToList();
+    }
+    public IQueryable<GroupedTheme> GetThemesSeperated()
+    {
+        IQueryable<GroupedTheme> groupedThemes =
+            this.DBWords
+                .GroupBy(a => EF.Property<string>(a, "SUBJECT"))
+                .Select(s => new GroupedTheme
+                {
+                    Subject = s.Key,
+                    Words = s.ToList()
+                });
+        return groupedThemes;
+    }
+    public List<Words> GetWords(string subject)
+    {
+        return this.DBWords.Where(s => EF.Property<string>(s, "SUBJECT") == subject).ToList();
+    }
+    public void UpdateScore(User user)
+    {
+        var _user = this.Users.SingleOrDefault(u => u.UID == user.UID);
+        _user.HighScore = user.HighScore;
+        SaveChanges();
     }
 }
