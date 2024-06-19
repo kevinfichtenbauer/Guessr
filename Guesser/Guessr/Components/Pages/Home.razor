@@ -17,15 +17,21 @@
 <div>
     <strong>Timer:</strong> @remainingTime seconds
 </div>
-
+@code{
+    private void UpdateSelectedTheme(ChangeEventArgs e)
+    {
+        selectedTheme = e.Value.ToString();
+    }
+}
 @if (!gameStarted)
 {
     <div>
         <label for="themeSelect">Thema auswählen:</label>
-        <select id="themeSelect" @bind="selectedTheme">
-            @foreach (var theme in themes)
+        <select id="themeSelect" @onchange="UpdateSelectedTheme">
+            <option class="text-muted">Fach auswählen</option>
+            @foreach (var theme in _context.GetThemesSeperated())
             {
-                <option value="@theme">@theme</option>
+                <option value="@theme.Subject">@theme.Subject</option>
             }
         </select>
         <div>
@@ -69,7 +75,7 @@ else
         {
             <p>Game Over! Das geheime Wort war: @currentWord</p>
         }
-        <pre>@GetHangmanDisplay(attemptsLeft)</pre>
+        <img src="hangmans/@GetHangmanDisplay(attemptsLeft)"/>
     </div>
 }
 
@@ -250,79 +256,6 @@ else
     }
 
 // Hier könntest du zusätzliche Methoden für die Implementierung des Zeitmodus und anpassbarer Einstellungen hinzufügen
-}
-
-<h3>Hangman Game</h3>
-
-<div style="display: flex; justify-content: space-between;">
-    <div>
-        <strong>Name:</strong> @playerName
-    </div>
-    <div>
-        <strong>Score:</strong> @score
-    </div>
-</div>
-
-<div>
-    <strong>Timer:</strong> @elapsedTime
-</div>
-@code{
-    private void UpdateSelectedTheme(ChangeEventArgs e)
-    {
-        selectedTheme = e.Value.ToString();
-    }
-}
-
-@if (!gameStarted)
-{
-    <div>
-        <label for="themeSelect">Thema auswählen:</label>
-        <select id="themeSelect" @onchange="UpdateSelectedTheme">
-            <option class="text-muted">Fach auswählen</option>
-            @foreach (var theme in _context.GetThemesSeperated())
-            {
-                <option value="@theme.Subject">@theme.Subject</option>
-            }
-        </select>
-        <button @onclick="StartGame">Spiel starten</button>
-    </div>
-}
-else
-{
-    <div>
-        <h4>Thema: @selectedTheme</h4>
-        <p>
-            @foreach (char letter in currentWord.ToCharArray())
-            {
-                if (guessedLetters.Contains(letter))
-                {
-                    <span>@letter</span>
-                }
-                else
-                {
-                    <span>_ </span>
-                }
-            }
-        </p>
-        <p>Verwendete Buchstaben: @string.Join(", ", guessedLetters)</p>
-        <input type="text" @bind="currentGuess" maxlength="1"/>
-        <button @onclick="CheckLetter">Buchstabe raten</button>
-        <button @onclick="GiveUp">Aufgeben</button>
-        <p>@currentStatusMessage</p>
-        @if (timeMode)
-        {
-            <p>Verbleibende Zeit: @remainingTime seconds</p>
-        }
-        @if (gameWon)
-        {
-            <p>Congratulations! Du hast das Wort richtig geraten: @currentWord</p>
-        }
-        @if (gameLost)
-        {
-            <p>Game Over! Das geheime Wort war: @currentWord</p>
-        }
-        <img src="hangmans/@GetHangmanDisplay(attemptsLeft)"/>
-    </div>
 }
 @foreach (var word in _context.GetWords(selectedTheme))
 {
