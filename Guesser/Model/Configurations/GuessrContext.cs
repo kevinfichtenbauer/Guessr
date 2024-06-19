@@ -20,6 +20,9 @@ public class GuessrContext:DbContext
             .HasValue<SYTE>("SYTE")
             .HasValue<NWTK>("NWTK")
             .HasValue<ITP>("ITP");
+        builder.Entity<Words>()
+            .Property(s => s.Difficulty)
+            .HasConversion<string>();
     }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
         
