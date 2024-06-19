@@ -1,21 +1,77 @@
 ﻿@page "/"
 @using Model.Configurations
 @using Model.Entities
-@code{
+@rendermode InteractiveServer
 
-    public List<string> GetHangmanDisplay()
-    {
-        List<string> hangmans = new List<string>()
-        {
-            "0.png","1.png","2.png","3.png","4.png","5.png","6.png"
-        };
-        
-<div>
-    @foreach (var hangman in GetHangmanDisplay())
-    {
-        <img src="hangmans/@hangman" alt="hm"/>
-    }
+<h3>Hangman Game</h3>
+
+<div style="display: flex; justify-content: space-between;">
+    <div>
+        <strong>Name:</strong> @playerName
+    </div>
+    <div>
+        <strong>Score:</strong> @score
+    </div>
 </div>
+
+<div>
+    <strong>Timer:</strong> @remainingTime seconds
+</div>
+
+@if (!gameStarted)
+{
+    <div>
+        <label for="themeSelect">Thema auswählen:</label>
+        <select id="themeSelect" @bind="selectedTheme">
+            @foreach (var theme in themes)
+            {
+                <option value="@theme">@theme</option>
+            }
+        </select>
+        <div>
+            <label for="timeSelect">Zeit auswählen (in Sekunden):</label>
+            <input type="number" id="timeSelect" @bind="remainingTime" min="10" />
+        </div>
+        <button @onclick="StartGame" disabled="@(!IsValidStart())">Spiel starten</button>
+    </div>
+}
+else
+{
+    <div>
+        <h4>Thema: @selectedTheme</h4>
+        <p>
+            @foreach (char letter in currentWord.ToCharArray())
+            {
+                if (guessedLetters.Contains(letter))
+                {
+                    <span>@letter</span>
+                }
+                else
+                {
+                    <span>_ </span>
+                }
+            }
+        </p>
+        <p>Erratene Buchstaben: @string.Join(", ", guessedLetters)</p>
+        <input type="text" @bind="currentGuess" maxlength="1"/>
+        <button @onclick="CheckLetter">Buchstabe raten</button>
+        <button @onclick="GiveUp">Aufgeben</button>
+        <p>@currentStatusMessage</p>
+        @if (timeMode)
+        {
+            <p>Verbleibende Zeit: @remainingTime seconds</p>
+        }
+        @if (gameWon)
+        {
+            <p>Congratulations! Du hast das Wort richtig geraten: @currentWord</p>
+        }
+        @if (gameLost)
+        {
+            <p>Game Over! Das geheime Wort war: @currentWord</p>
+        }
+        <pre>@GetHangmanDisplay(attemptsLeft)</pre>
+    </div>
+}
 
 @code {
     public bool gameStarted = false;
@@ -41,9 +97,8 @@
 
     public void StartGame()
     {
-        if (!string.IsNullOrEmpty(selectedTheme))
+        if (!string.IsNullOrEmpty(selectedTheme) && remainingTime > 0)
         {
-            // Hier kannst du die Logik für die Wortauswahl je nach Thema implementieren
             currentWord = GetRandomWord(selectedTheme).ToUpper(); // Wort in Großbuchstaben für einfache Vergleiche
             gameStarted = true;
             currentStatusMessage = "";
@@ -55,35 +110,27 @@
             elapsedTime = 0;
             timer?.Dispose();
             timer = new Timer(TimerTick, null, 1000, 1000);
-
-            if (timeMode)
-            {
-                remainingTime = 60; // Setze die Zeit zurück oder starte den Timer
-            }
+            StateHasChanged(); // Ensure the state is updated
         }
     }
 
     public string GetRandomWord(string theme)
     {
-        // Hier müsstest du die Implementierung für die Auswahl eines zufälligen Wortes je nach Thema einfügen
-        // Dies könnte von einem externen Service oder einer statischen Liste kommen
-        // Beispiel:
         if (theme == "Tiere")
         {
-            return "HUND"; // Hier ein zufälliges Wort für das Thema Tiere
+            return "HUND";
         }
         else if (theme == "Berufe")
         {
-            return "ARZT"; // Hier ein zufälliges Wort für das Thema Berufe
+            return "ARZT";
         }
-
         // Weitere Themen hinzufügen...
         return "";
     }
 
     public void CheckLetter()
     {
-        if (!gameWon)
+        if (!gameWon && !gameLost)
         {
             if (!string.IsNullOrEmpty(currentGuess) && currentGuess.Length == 1)
             {
@@ -93,8 +140,9 @@
                     guessedLetters.Add(guessedLetter);
                     if (currentWord.Contains(guessedLetter))
                     {
+                        int timePenalty = (int)Math.Floor((double)elapsedTime / 10); // Reduce points based on time taken
                         currentStatusMessage = $"Gut geraten! Der Buchstabe '{guessedLetter}' ist im Wort enthalten.";
-                        score += 3;
+                        score += Math.Max(1, 3 - timePenalty);
                     }
                     else
                     {
@@ -128,6 +176,7 @@
             }
 
             currentGuess = "";
+            StateHasChanged(); // Ensure the state is updated
         }
     }
 
@@ -135,10 +184,9 @@
     {
         foreach (var letter in currentWord)
         {
-            if (!this.guessedLetters.Contains(letter))
+            if (!guessedLetters.Contains(letter))
                 return false;
         }
-
         return true;
     }
 
@@ -153,12 +201,12 @@
         gameWon = false;
         gameLost = false;
         timer?.Dispose();
+        StateHasChanged(); // Ensure the state is updated
     }
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        // Hier könntest du zusätzliche Initialisierungslogik einfügen, wenn benötigt
     }
 
     public string GetHangmanDisplay(int attemptsLeft)
@@ -228,79 +276,22 @@
 
     public void TimerTick(object state)
     {
-        elapsedTime++;
-        InvokeAsync(StateHasChanged);
+        if (gameStarted && remainingTime > 0)
+        {
+            remainingTime--;
+            elapsedTime++;
+            if (remainingTime == 0)
+            {
+                gameLost = true;
+                currentStatusMessage = "Zeit abgelaufen! Du hast verloren.";
+                timer?.Dispose();
+            }
+            InvokeAsync(StateHasChanged);
+        }
     }
 
-// Hier könntest du zusätzliche Methoden für die Implementierung des Zeitmodus und anpassbarer Einstellungen hinzufügen
+    public bool IsValidStart()
+    {
+        return !string.IsNullOrEmpty(selectedTheme) && remainingTime > 0;
+    }
 }
-<h3>Hangman Game</h3>
-
-<div style="display: flex; justify-content: space-between;">
-    <div>
-        <strong>Name:</strong> @playerName
-    </div>
-    <div>
-        <strong>Score:</strong> @score
-    </div>
-</div>
-
-<div>
-    <strong>Timer:</strong> @elapsedTime
-</div>
-
-@if (!gameStarted)
-{
-    <div>
-        <label for="themeSelect">Thema auswählen:</label>
-        <select id="themeSelect" @bind="selectedTheme">
-            @foreach (var theme in themes)
-            {
-                <option value="@theme">@theme</option>
-            }
-        </select>
-        <button @onclick="StartGame">Spiel starten</button>
-    </div>
-}
-else
-{
-    <div>
-        <h4>Thema: @selectedTheme</h4>
-        <p>
-            @foreach (char letter in currentWord.ToCharArray())
-            {
-                if (guessedLetters.Contains(letter))
-                {
-                    <span>@letter</span>
-                }
-                else
-                {
-                    <span>_ </span>
-                }
-            }
-        </p>
-        <p>Erratene Buchstaben: @string.Join(", ", guessedLetters)</p>
-        <input type="text" @bind="currentGuess" maxlength="1"/>
-        <button @onclick="CheckLetter">Buchstabe raten</button>
-        <button @onclick="GiveUp">Aufgeben</button>
-        <p>@currentStatusMessage</p>
-        @if (timeMode)
-        {
-            <p>Verbleibende Zeit: @remainingTime seconds</p>
-        }
-        @if (gameWon)
-        {
-            <p>Congratulations! Du hast das Wort richtig geraten: @currentWord</p>
-        }
-        @if (gameLost)
-        {
-            <p>Game Over! Das geheime Wort war: @currentWord</p>
-        }
-        <pre>@GetHangmanDisplay(attemptsLeft)</pre>
-    </div>
-}
-
-
-
-
-
