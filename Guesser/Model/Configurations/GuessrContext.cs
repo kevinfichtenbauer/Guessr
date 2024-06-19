@@ -5,6 +5,8 @@ namespace Model.Configurations;
 
 public class GuessrContext:DbContext
 {
+    public GuessrContext():base(){}
+    public GuessrContext(DbContextOptions<GuessrContext> context) : base(context){}
     public DbSet<User> Users { get; set; }
     public DbSet<Words> DBWords { get; set; }
     public List<string> Subjects { get; set; }
@@ -32,11 +34,6 @@ public class GuessrContext:DbContext
             new MySqlServerVersion(new Version(8, 0, 29))
         );
     }
-    //user switchen
-    public List<User> GetUsers()
-    {
-        return Users.ToList();
-    }
     public IQueryable<GroupedTheme> GetThemesSeperated()
     {
         IQueryable<GroupedTheme> groupedThemes =
@@ -53,10 +50,24 @@ public class GuessrContext:DbContext
     {
         return this.DBWords.Where(s => EF.Property<string>(s, "SUBJECT") == subject).ToList();
     }
-    public void UpdateScore(User user)
+
+    public void SaveNormalScore(User user)
     {
-        var _user = this.Users.SingleOrDefault(u => u.UID == user.UID);
-        _user.HighScore = user.HighScore;
-        SaveChanges();
+        if (Users.Contains(user))
+        {
+            foreach (var x in Users)
+            {
+                if (x.Name == user.Name)
+                {
+                    if (x.HighScore < user.HighScore)
+                        x.HighScore = user.HighScore;
+                }
+            }
+        }
+        else
+        {
+            Users.Add(new User() { Name = user.Name, HighScore = user.HighScore });
+        }
+        this.SaveChanges();
     }
 }
