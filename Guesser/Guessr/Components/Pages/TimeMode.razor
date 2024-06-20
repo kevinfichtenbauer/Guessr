@@ -4,6 +4,7 @@
 @using Model.Entities
 @rendermode InteractiveServer
 @inject SharedClass SharedService
+@inject NavigationManager manager
 
 <h3>Hangman Game</h3>
 
@@ -37,14 +38,28 @@
                 <option value="@theme.Subject">@theme.Subject</option>
             }
         </select>
+    </div>
+    <div>
+        <label for="themeSelect">Schwierigkeit auswählen:</label>
+        <select id="themeSelect" @onchange="UpdateSelectedDifficulty">
+            <option class="text-muted">Schwierigkeit</option>
+            <option value="leicht">Leicht</option>
+            <option value="mittel">Mittel</option>
+            <option value="schwer">Schwer</option>
+        </select>
+    </div>
+    <div>
         <div>
             <label for="timeSelect">Zeit auswählen (in Sekunden):</label>
-            <input type="number" id="timeSelect" @bind="remainingTime" min="10" />
+            <input type="number" id="timeSelect" @bind="remainingTime" min="10"/>
         </div>
+    </div>
+    <div>
         <button @onclick="StartGame" disabled="@(!IsValidStart())">Spiel starten</button>
     </div>
 }
-else{
+else
+{
     <div>
         <h4>Thema: @selectedTheme</h4>
         <p>
@@ -73,12 +88,17 @@ else{
         {
             <p>Congratulations! Du hast das Wort richtig geraten: @currentWord</p>
             gameWon = true;
-            SharedService.SharedUser.HighScoreSec = elapsedTime;
-            SharedService.SharedUser.TimeHighScore = score;
-            Console.WriteLine(SharedService.SharedUser.TimeHighScore);
-            Console.WriteLine(SharedService.SharedUser.HighScoreSec);
+            if (SharedService.playedAgain == true && (SharedService.SavedScore > SharedService.SharedUser.TimeHighScore||SharedService.TimeSavedSec < SharedService.SharedUser.HighScoreSec))
+            {
+                SharedService.SharedUser.TimeHighScore = SharedService.SavedScore;
+                SharedService.SharedUser.HighScoreSec = SharedService.TimeSavedSec;
+            }
+            if (score > SharedService.SharedUser.TimeHighScore || elapsedTime < SharedService.SharedUser.HighScoreSec)
+            {
+                SharedService.SharedUser.TimeHighScore = score;
+                SharedService.SharedUser.HighScoreSec = elapsedTime;
+            }
             SaveUserData();
-            
         }
         @if (gameLost)
         {
@@ -98,53 +118,161 @@ else{
     public string currentStatusMessage = "";
     public bool timeMode = false;
     public int remainingTime = 60; // Zeit in Sekunden (kann angepasst werden)
-    public List<string> themes = new List<string>();
     public int maxAttempts = 6; // Maximale Anzahl von Versuchen
+    public EDIFFICULTY Difficulty = EDIFFICULTY.none;
 
     public bool gameWon = false;
     public bool gameLost = false;
     public int attemptsLeft;
-    
+
     public int score = 0;
 
     public Timer timer;
     public int elapsedTime;
+    
+    private void UpdateSelectedDifficulty(ChangeEventArgs e)
+    {
+        if (e.Value.ToString() == "leicht")
+        {
+            Difficulty = EDIFFICULTY.EASY;
+        }
 
+        if (e.Value.ToString() == "mittel")
+        {
+            Difficulty = EDIFFICULTY.MEDIUM;
+        }
+
+        if (e.Value.ToString() == "schwer")
+        {
+            Difficulty = EDIFFICULTY.HARD;
+        }
+    }
     public void SaveUserData()
     {
         _context.SaveTimeScore(SharedService.SharedUser);
     }
-    
+
     private void UpdateSelectedTheme(ChangeEventArgs e)
     {
         selectedTheme = e.Value.ToString();
     }
+
     public void StartGame()
     {
-        if (!string.IsNullOrEmpty(selectedTheme) && remainingTime > 0)
+        if (SharedService.playedAgain == true)
         {
-            // Hier kannst du die Logik für die Wortauswahl je nach Thema implementieren
-            currentWord = GetRandomWord().ToUpper(); // Wort in Großbuchstaben für einfache Vergleiche
-            gameStarted = true;
-            currentStatusMessage = "";
-            guessedLetters.Clear();
-            currentGuess = "";
-            attemptsLeft = maxAttempts;
-            gameWon = false;
-            gameLost = false;
-            elapsedTime = 0;
-            timer?.Dispose();
-            timer = new Timer(TimerTick, null, 1000, 1000);
-            StateHasChanged(); // Ensure the state is updated
+            score = SharedService.SavedScore;
+            remainingTime = SharedService.RemainingTime;
+            if (!string.IsNullOrEmpty(selectedTheme) && remainingTime > 0)
+            {
+                // Hier kannst du die Logik für die Wortauswahl je nach Thema implementieren
+                currentWord = GetRandomWord().ToUpper(); // Wort in Großbuchstaben für einfache Vergleiche
+                gameStarted = true;
+                currentStatusMessage = "";
+                guessedLetters.Clear();
+                currentGuess = "";
+                attemptsLeft = maxAttempts;
+                gameWon = false;
+                gameLost = false;
+                StateHasChanged(); // Ensure the state is updated
+            }
         }
+        if (SharedService.playedAgain == false)
+        {
+            score = 0;
+            SharedService.RemainingTime = 0;
+            if (!string.IsNullOrEmpty(selectedTheme) && remainingTime > 0)
+            {
+                // Hier kannst du die Logik für die Wortauswahl je nach Thema implementieren
+                currentWord = GetRandomWord().ToUpper(); // Wort in Großbuchstaben für einfache Vergleiche
+                gameStarted = true;
+                currentStatusMessage = "";
+                guessedLetters.Clear();
+                currentGuess = "";
+                attemptsLeft = maxAttempts;
+                gameWon = false;
+                gameLost = false;
+                elapsedTime = 0;
+                timer?.Dispose();
+                timer = new Timer(TimerTick, null, 1000, 1000);
+                StateHasChanged(); // Ensure the state is updated
+            }
+        }
+        
     }
 
     public string GetRandomWord()
     {
         List<Words> words = _context.GetWords(selectedTheme);
+        var grouped = words.OrderBy(s => s.Difficulty).GroupBy(s => s.Difficulty).Select(s =>
+            new { Diff = s.Key, sorted = s.ToList() });
         Random rnd = new Random();
-        int i = rnd.Next(0, words.Count-1);
-        string _currentWord = words[i].Word;
+        foreach (var x in grouped)
+        {
+            if (Difficulty == EDIFFICULTY.EASY)
+            {
+                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.EASY).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
+                if (list.Count > 0)
+                {
+                    int i = rnd.Next(0, list.Count);
+                    Console.WriteLine(list[i].wo + " " + list[i].di);
+                    return list[0].wo;
+                }
+            }
+            else if (Difficulty == EDIFFICULTY.MEDIUM)
+            {
+                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.MEDIUM).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
+                if (list.Count > 0)
+                {
+                    int i = rnd.Next(0, list.Count);
+                    Console.WriteLine(list[i].wo + " " + list[i].di);
+                    return list[0].wo;
+                }
+            }
+            else if (Difficulty == EDIFFICULTY.HARD)
+            {
+                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.HARD).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
+                if (list.Count > 0)
+                {
+                    int i = rnd.Next(0, list.Count);
+                    Console.WriteLine(list[i].wo + " " + list[i].di);
+                    return list[0].wo;
+                }
+            }
+        }
+        /*foreach (var x in grouped)
+        {
+            if (Difficulty == EDIFFICULTY.EASY)
+            {
+                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.EASY).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
+                if (list.Count > 0)
+                {
+                    int i = rnd.Next(0, list.Count);
+                    Console.WriteLine(list[i].wo + " " + list[i].di);
+                    return list[i].wo;
+                }
+            }
+            else if (Difficulty == EDIFFICULTY.MEDIUM)
+            {
+                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.MEDIUM).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
+                if (list.Count > 0)
+                {
+                    int i = rnd.Next(0, list.Count);
+                    Console.WriteLine(list[i].wo + " " + list[i].di);
+                    return list[i].wo;
+                }
+            }
+            else if (Difficulty == EDIFFICULTY.HARD)
+            {
+                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.HARD).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
+                if (list.Count > 0)
+                {
+                    int i = rnd.Next(0, list.Count);
+                    Console.WriteLine(list[i].wo + " " + list[i].di);
+                    return list[i].wo;
+                }
+            }
+        }*/
         return words[0].Word;
     }
 
@@ -207,11 +335,13 @@ else{
             if (!guessedLetters.Contains(letter))
                 return false;
         }
+
         return true;
     }
 
     public void GiveUp()
     {
+        Difficulty = EDIFFICULTY.none;
         gameStarted = false;
         selectedTheme = "";
         currentWord = "";
@@ -220,6 +350,9 @@ else{
         currentStatusMessage = "";
         gameWon = false;
         gameLost = false;
+        SharedService.SavedScore = 0;
+        SharedService.TimeSavedSec = 0;
+        SharedService.playedAgain = false;
         timer?.Dispose();
         StateHasChanged(); // Ensure the state is updated
     }
@@ -241,6 +374,7 @@ else{
         {
             return hangmanImages[index];
         }
+
         return hangmanImages[0]; // Default image if index is out of bounds
     }
 
@@ -264,9 +398,35 @@ else{
     {
         return !string.IsNullOrEmpty(selectedTheme) && remainingTime > 0;
     }
+    public void Again()
+    {
+        Console.WriteLine(score);
+        SharedService.SavedScore += score;
+        SharedService.TimeSavedSec = remainingTime;
+        score = 0;
+        remainingTime = 0;
+        SharedService.playedAgain = true;
+        if (SharedService.SavedScore > SharedService.SharedUser.HighScore)
+            SharedService.SharedUser.HighScore = SharedService.SavedScore;
+        SaveUserData();
+        manager.NavigateTo("/TimeMode", true);
+        StateHasChanged();
+    }
+
+    public void End()
+    {
+        Console.WriteLine(SharedService.SharedUser.HighScore);
+        SharedService.SavedScore = 0;
+        SharedService.RemainingTime = 0;
+        SaveUserData();
+        manager.NavigateTo("/Scoreboard", true);
+        StateHasChanged();
+    }
 
 // Hier könntest du zusätzliche Methoden für die Implementierung des Zeitmodus und anpassbarer Einstellungen hinzufügen
 }
+<button @onclick="Again" disabled="@(gameWon == false)">Weiterspielen</button>
+<button @onclick="End">Beenden</button>
 @foreach (var word in _context.GetWords(selectedTheme))
 {
     <div>@word.Word</div>
