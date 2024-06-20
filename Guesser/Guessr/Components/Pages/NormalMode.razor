@@ -104,15 +104,15 @@ else
 
     private void UpdateSelectedDifficulty(ChangeEventArgs e)
     {
-        if (e.Value == "leicht")
+        if (e.Value.ToString() == "leicht")
         {
             Difficulty = EDIFFICULTY.EASY;
         }
-        if (e.Value == "mittel")
+        if (e.Value.ToString() == "mittel")
         {
             Difficulty = EDIFFICULTY.MEDIUM;
         }
-        if (e.Value == "schwer")
+        if (e.Value.ToString() == "schwer")
         {
             Difficulty = EDIFFICULTY.HARD;
         }
@@ -125,7 +125,6 @@ else
     {
         if (!string.IsNullOrEmpty(selectedTheme))
         {
-            
             currentWord = GetRandomWord().ToUpper(); // Wort in Großbuchstaben für einfache Vergleiche
             gameStarted = true;
             currentStatusMessage = "";
@@ -144,13 +143,35 @@ else
     public string GetRandomWord()
     {
         List<Words> words = _context.GetWords(selectedTheme);
-        foreach (var VARIABLE in words)
+        var grouped = words.GroupBy(s => s.Difficulty).Select(s => 
+            new { Diff = s.Key, sorted = s.ToList() });
+        foreach (var x in grouped)
         {
-            Console.WriteLine(VARIABLE.Word);
+            if (Difficulty == EDIFFICULTY.EASY)
+            {
+                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.EASY).Select(s => new {wo = s.Word, di = s.Difficulty}).ToList();
+                Random rnd = new Random();
+                int i = rnd.Next(0, list.Count-1);
+                Console.WriteLine(list[i].wo + " " + list[i].di);
+                return list[i].wo;
+            }
+            if (Difficulty == EDIFFICULTY.MEDIUM)
+            {
+                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.MEDIUM).Select(s => new {wo = s.Word, di = s.Difficulty}).ToList();
+                Random rnd = new Random();
+                int i = rnd.Next(0, list.Count-1);
+                Console.WriteLine(list[i].wo + " " + list[i].di);
+                return list[i].wo;
+            }
+            if (Difficulty == EDIFFICULTY.HARD)
+            {
+                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.HARD).Select(s => new {wo = s.Word, di = s.Difficulty}).ToList();
+                Random rnd = new Random();
+                int i = rnd.Next(0, list.Count-1);
+                Console.WriteLine(list[i].wo + " " + list[i].di);
+                return list[i].wo;
+            }
         }
-        Random rnd = new Random();
-        int i = rnd.Next(0, words.Count-1);
-        string _currentWord = words[i].Word;
         return words[0].Word;
     }
 
@@ -216,6 +237,7 @@ else
 
     public void GiveUp()
     {
+        Difficulty = EDIFFICULTY.none;
         gameStarted = false;
         selectedTheme = "";
         currentWord = "";
