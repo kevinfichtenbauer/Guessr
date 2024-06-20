@@ -215,7 +215,7 @@ else
 
     public void StartGame()
     {
-        if (SharedService.playedAgain)
+        if (SharedService.playedAgain == true)
         {
             score = SharedService.SavedScore;
             remainingTime = SharedService.RemainingTime;
@@ -223,8 +223,7 @@ else
         }
         else
         {
-            score = 0;
-            remainingTime = 60; // Default time or however you want to set it
+            score = 0; 
             elapsedTime = 0;
         }
 
