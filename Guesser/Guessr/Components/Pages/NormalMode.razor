@@ -15,6 +15,14 @@
         <strong>Score:</strong> @score
     </div>
 </div>
+<div style="display: flex; justify-content: space-between;">
+    <div>
+        <strong class="text-white">.</strong>
+    </div>
+    <div>
+        <strong>HighScore:</strong> @SharedService.SharedUser.HighScore
+    </div>
+</div>
 @if (!gameStarted)
 {
     <div>
@@ -213,7 +221,6 @@ else
         return hangmanImages[0]; // Default image if index is out of bounds
     }
     
-
     public bool IsValidStart()
     {
         return !string.IsNullOrEmpty(selectedTheme);
@@ -226,7 +233,7 @@ else
 
 // Hier könntest du zusätzliche Methoden für die Implementierung des Zeitmodus und anpassbarer Einstellungen hinzufügen
 }
-
+<button @onclick="BackToStart">Zurück</button>
 @foreach (var word in _context.GetWords(selectedTheme))
 {
     <div>@word.Word</div>
