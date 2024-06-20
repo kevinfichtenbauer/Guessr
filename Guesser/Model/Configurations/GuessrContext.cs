@@ -9,8 +9,8 @@ public class GuessrContext:DbContext
     public GuessrContext(DbContextOptions<GuessrContext> context) : base(context){}
     public DbSet<User> Users { get; set; }
     public DbSet<Words> DBWords { get; set; }
-    public List<string> Subjects { get; set; }
-    public List<Words> WordList { get; set; }
+    /*public List<string> Subjects { get; set; }
+    public List<Words> WordList { get; set; }*/
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.Entity<Words>()
@@ -51,6 +51,15 @@ public class GuessrContext:DbContext
         return this.DBWords.Where(s => EF.Property<string>(s, "SUBJECT") == subject).ToList();
     }
 
+    public List<User> GetUsers()
+    {
+        List<User> _users = new List<User>();
+        foreach (var x in Users)
+        {
+            _users.Add(x);
+        }
+        return _users;
+    }
     public void SaveNormalScore(User user)
     {
         var existingUser = Users.FirstOrDefault(u => u.Name == user.Name);
@@ -67,6 +76,30 @@ public class GuessrContext:DbContext
             Users.Add(new User() { Name = user.Name, HighScore = user.HighScore });
         }
 
+        this.SaveChanges();
+    }
+    public void SaveTimeScore(User user)
+    {
+        var existingUser = Users.FirstOrDefault(u => u.Name == user.Name);
+
+        if (existingUser != null)
+        {
+            if (existingUser.TimeHighScore < user.TimeHighScore || existingUser.HighScoreSec < user.HighScoreSec)
+            {
+                existingUser.TimeHighScore = user.TimeHighScore;
+                existingUser.HighScoreSec = user.HighScoreSec;
+            }
+        }
+        else
+        {
+            Users.Add(new User() { Name = user.Name, HighScoreSec = user.HighScoreSec, TimeHighScore = user.TimeHighScore });
+        }
+
+        this.SaveChanges();
+    }
+
+    public void UpdateDatabase()
+    {
         this.SaveChanges();
     }
 }

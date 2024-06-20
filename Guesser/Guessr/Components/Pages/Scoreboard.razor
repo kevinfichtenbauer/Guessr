@@ -1,0 +1,56 @@
+﻿@page "/Scoreboard"
+@using Model.Entities
+@using Model.Configurations
+@rendermode InteractiveServer
+@inject SharedClass SharedService
+@inject NavigationManager manager
+@inject IJSRuntime JS
+<div id="main-container">
+    <div id="content">
+        <h3>Spiel beendet</h3>
+        @if (updated == true)
+        {
+
+            <p class="text-danger">Username: @SharedService.SharedUser.Name</p>
+            <p>Normaler Modus</p>
+            <p>HighScore: @SharedService.SharedUser.HighScore</p>
+            <p>Zeitmodus</p>
+            <p>HighScore: @SharedService.SharedUser.TimeHighScore</p>
+            <p>Schnellste Zeit: @SharedService.SharedUser.HighScoreSec</p>
+        }
+        <button class="text-dark" @onclick="Update">Highscore ansehen</button>
+        <button class="text-dark" @onclick="Again">noch einmal</button>
+    </div>
+    
+</div>
+@code {
+    private GuessrContext context = new GuessrContext();
+    private bool updated = false;
+    private void Update()
+    {
+        context.UpdateDatabase();
+        updated = true;
+        Users = context.GetUsers();
+        for (int i = 0; i < Users.Count; i++)
+        {
+            if (Users[i].Name == SharedService.SharedUser.Name)
+            {
+                SharedService.SharedUser.HighScore = Users[i].HighScore;
+                SharedService.SharedUser.HighScoreSec = Users[i].HighScoreSec;
+                SharedService.SharedUser.TimeHighScore = Users[i].TimeHighScore;
+            }
+        }
+        StateHasChanged();
+    }
+    private void Again()
+    {
+        manager.NavigateTo("/");
+        StateHasChanged();
+    }
+    public List<User> Users = new List<User>();
+}
+<script>
+    window.showAlert= function (message){
+        alert(message)
+    }
+</script>

@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using Model.Entities
+@using Model.Configurations
 @rendermode InteractiveServer
 @inject SharedClass SharedService
 @inject NavigationManager manager
@@ -29,6 +30,16 @@
         }
         else
         {
+            Users = SharedService.Context.GetUsers();
+            for (int i = 0; i < Users.Count; i++)
+            {
+                if (Users[i].Name == SharedService.SharedUser.Name)
+                {
+                    SharedService.SharedUser.HighScore = Users[i].HighScore;
+                    SharedService.SharedUser.HighScoreSec = Users[i].HighScoreSec;
+                    SharedService.SharedUser.TimeHighScore = Users[i].TimeHighScore;
+                }
+            }
             if (SharedService.GameMode == EGameMode.Normal)
             {
                 manager.NavigateTo("/NormalMode");
@@ -44,6 +55,7 @@
         }
     }
 
+    public List<User> Users = new List<User>();
     private async Task AlertName()
     {
         await JS.InvokeVoidAsync("showAlert", "Bitte geben Sie einen Namen ein.");
