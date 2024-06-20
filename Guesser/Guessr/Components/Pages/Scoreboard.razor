@@ -1,5 +1,6 @@
 ﻿@page "/Scoreboard"
 @using Model.Entities
+@using Model.Configurations
 @rendermode InteractiveServer
 @inject SharedClass SharedService
 @inject NavigationManager manager
@@ -23,12 +24,13 @@
     
 </div>
 @code {
+    private GuessrContext context = new GuessrContext();
     private bool updated = false;
     private void Update()
     {
-        StateHasChanged();
+        context.UpdateDatabase();
         updated = true;
-        Users = SharedService.Context.GetUsers();
+        Users = context.GetUsers();
         for (int i = 0; i < Users.Count; i++)
         {
             if (Users[i].Name == SharedService.SharedUser.Name)
@@ -38,7 +40,7 @@
                 SharedService.SharedUser.TimeHighScore = Users[i].TimeHighScore;
             }
         }
-        
+        StateHasChanged();
     }
     private void Again()
     {

@@ -97,4 +97,9 @@ public class GuessrContext:DbContext
 
         this.SaveChanges();
     }
+
+    public void UpdateDatabase()
+    {
+        this.SaveChanges();
+    }
 }
