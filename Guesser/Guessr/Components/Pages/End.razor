@@ -1,0 +1,46 @@
+﻿@page "/End"
+@using Model.Entities
+@rendermode InteractiveServer
+@inject SharedClass SharedService
+@inject NavigationManager manager
+@inject IJSRuntime JS
+<div id="main-container">
+    <div id="content">
+        @if (updated == true)
+        {
+            <h3>Spiel beendet</h3>
+            <p>@SharedService.SharedUser.Name</p>
+            <p>Normaler Modus</p>
+            <p>HighScore: @SharedService.SharedUser.HighScore</p>
+            <p>Zeitmodus</p>
+            <p>HighScore: @SharedService.SharedUser.TimeHighScore</p>
+            <p>Schnellste Zeit: @SharedService.SharedUser.HighScoreSec</p>
+        }
+        <button class="text-dark" @onclick="Update">Highscore ansehen</button>
+    </div>
+    
+</div>
+@code {
+    private bool updated = false;
+    private void Update()
+    {
+        updated = true;
+        Users = SharedService.Context.GetUsers();
+        for (int i = 0; i < Users.Count; i++)
+        {
+            if (Users[i].Name == SharedService.SharedUser.Name)
+            {
+                SharedService.SharedUser.HighScore = Users[i].HighScore;
+                SharedService.SharedUser.HighScoreSec = Users[i].HighScoreSec;
+                SharedService.SharedUser.TimeHighScore = Users[i].TimeHighScore;
+            }
+        }
+        
+    }
+    public List<User> Users = new List<User>();
+}
+<script>
+    window.showAlert= function (message){
+        alert(message)
+    }
+</script>

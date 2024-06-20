@@ -72,9 +72,10 @@ else
         {
             <p>Congratulations! Du hast das Wort richtig geraten: @currentWord</p>
             gameWon = true;
-            Console.WriteLine(SharedService.SharedUser.Name);
-            SharedService.SharedUser.HighScore = score;
-            Console.WriteLine(SharedService.SharedUser.HighScore);
+            if (SharedService.playedAgain == true && SharedService.SavedScore > SharedService.SharedUser.HighScore)
+            {
+                SharedService.SharedUser.HighScore = SharedService.SavedScore;
+            }
             SaveUserData();
         }
         @if (gameLost)
@@ -143,35 +144,75 @@ else
     public string GetRandomWord()
     {
         List<Words> words = _context.GetWords(selectedTheme);
-        var grouped = words.GroupBy(s => s.Difficulty).Select(s => 
+        var grouped = words.OrderBy(s => s.Difficulty).GroupBy(s => s.Difficulty).Select(s => 
             new { Diff = s.Key, sorted = s.ToList() });
+        Random rnd = new Random();
         foreach (var x in grouped)
         {
             if (Difficulty == EDIFFICULTY.EASY)
             {
-                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.EASY).Select(s => new {wo = s.Word, di = s.Difficulty}).ToList();
-                Random rnd = new Random();
-                int i = rnd.Next(0, list.Count-1);
-                Console.WriteLine(list[i].wo + " " + list[i].di);
-                return list[i].wo;
+                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.EASY).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
+                if (list.Count > 0)
+                {
+                    int i = rnd.Next(0, list.Count);
+                    Console.WriteLine(list[i].wo + " " + list[i].di);
+                    return list[0].wo;
+                }
             }
-            if (Difficulty == EDIFFICULTY.MEDIUM)
+            else if (Difficulty == EDIFFICULTY.MEDIUM)
             {
-                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.MEDIUM).Select(s => new {wo = s.Word, di = s.Difficulty}).ToList();
-                Random rnd = new Random();
-                int i = rnd.Next(0, list.Count-1);
-                Console.WriteLine(list[i].wo + " " + list[i].di);
-                return list[i].wo;
+                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.MEDIUM).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
+                if (list.Count > 0)
+                {
+                    int i = rnd.Next(0, list.Count);
+                    Console.WriteLine(list[i].wo + " " + list[i].di);
+                    return list[0].wo;
+                }
             }
-            if (Difficulty == EDIFFICULTY.HARD)
+            else if (Difficulty == EDIFFICULTY.HARD)
             {
-                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.HARD).Select(s => new {wo = s.Word, di = s.Difficulty}).ToList();
-                Random rnd = new Random();
-                int i = rnd.Next(0, list.Count-1);
-                Console.WriteLine(list[i].wo + " " + list[i].di);
-                return list[i].wo;
+                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.HARD).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
+                if (list.Count > 0)
+                {
+                    int i = rnd.Next(0, list.Count);
+                    Console.WriteLine(list[i].wo + " " + list[i].di);
+                    return list[0].wo;
+                }
             }
         }
+        /*foreach (var x in grouped)
+        {
+            if (Difficulty == EDIFFICULTY.EASY)
+            {
+                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.EASY).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
+                if (list.Count > 0)
+                {
+                    int i = rnd.Next(0, list.Count);
+                    Console.WriteLine(list[i].wo + " " + list[i].di);
+                    return list[i].wo;
+                }
+            }
+            else if (Difficulty == EDIFFICULTY.MEDIUM)
+            {
+                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.MEDIUM).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
+                if (list.Count > 0)
+                {
+                    int i = rnd.Next(0, list.Count);
+                    Console.WriteLine(list[i].wo + " " + list[i].di);
+                    return list[i].wo;
+                }
+            }
+            else if (Difficulty == EDIFFICULTY.HARD)
+            {
+                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.HARD).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
+                if (list.Count > 0)
+                {
+                    int i = rnd.Next(0, list.Count);
+                    Console.WriteLine(list[i].wo + " " + list[i].di);
+                    return list[i].wo;
+                }
+            }
+        }*/
         return words[0].Word;
     }
 
@@ -246,6 +287,8 @@ else
         currentStatusMessage = "";
         gameWon = false;
         gameLost = false;
+        SharedService.SavedScore = 0;
+        SharedService.playedAgain = false;
         StateHasChanged(); // Ensure the state is updated
     }
 
@@ -278,10 +321,33 @@ else
     {
         manager.NavigateTo("/",true);
     }
-
+    
+    public void Again()
+    {
+        Console.WriteLine(score);
+        SharedService.SavedScore += score;
+        score = 0;
+        SharedService.playedAgain = true;
+        if (SharedService.SavedScore > SharedService.SharedUser.HighScore)
+            SharedService.SharedUser.HighScore = SharedService.SavedScore;
+        SaveUserData();
+        manager.NavigateTo("/NormalMode",true);
+        StateHasChanged();
+    }
+    
+    public void End()
+    {
+        Console.WriteLine(SharedService.SharedUser.HighScore);
+        SharedService.SavedScore = 0;
+        SaveUserData();
+        manager.NavigateTo("/End",true);
+        StateHasChanged();
+    }
 // Hier könntest du zusätzliche Methoden für die Implementierung des Zeitmodus und anpassbarer Einstellungen hinzufügen
 }
 <button @onclick="BackToStart">Zurück</button>
+<button @onclick="Again" disabled="@(gameWon == false)">Weiterspielen</button>
+<button @onclick="End">Beenden</button>
 @foreach (var word in _context.GetWords(selectedTheme))
 {
     <div>@word.Word</div>

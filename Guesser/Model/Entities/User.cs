@@ -53,4 +53,6 @@ public class SharedClass
     public User SharedUser { get; set; } = new User(){Name = ""};
     public EGameMode GameMode { get; set; } = EGameMode.none;
     public GuessrContext Context = new GuessrContext();
+    public int SavedScore { get; set; } = 0;
+    public bool playedAgain { get; set; } = false;
 }
