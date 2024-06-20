@@ -4,7 +4,36 @@
 @using Model.Entities
 @rendermode InteractiveServer
 @inject SharedClass SharedService
-
+<section class="section-top">
+    <div class="div-dark div-highscore"><p>HighScore: @SharedService.SharedUser.HighScore</p></div>
+    <div class="div-blue div-score"><p>Score: @score</p></div>
+    <div class="div-dark div-theme">
+        <select id="themeSelect" class=div-dark style="color:white; border:0px solid black" @onchange="UpdateSelectedTheme">
+            <option class="text-muted">Fach</option>
+            @foreach (var theme in _context.GetThemesSeperated())
+            {
+                <option value="@theme.Subject">@theme.Subject</option>
+            }
+        </select>
+    </div>
+    <div class="div-blue div-timer">
+        <p>Timer</p>
+    </div>
+    <div class="div-dark div-difficulty">Einfach
+        <div class="dropdown-content2">
+            <a href="#">Option1</a>
+            <a href="#">Option2</a>
+            <a href="#">Option3</a>
+        </div>
+    </div>
+    <div class="div-blue div-name">
+        <p>@SharedService.SharedUser.Name</p>
+    </div>
+</section>
+<section class="section-bottom">
+    <div class="div-large"><p>H T _ - K _ _ m s</p></div>
+    <div class="div-small"><p>Guesses</p></div>
+</section>
 <h3>Hangman Game</h3>
 
 <div style="display: flex; justify-content: space-between;">

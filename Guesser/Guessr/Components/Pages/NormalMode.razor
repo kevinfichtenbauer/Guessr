@@ -1,80 +1,75 @@
-﻿@page "/NormalMode"
+﻿@page "/"
 @using Model.Configurations
 @using Model.Entities
 @rendermode InteractiveServer
 @inject SharedClass SharedService
 @inject NavigationManager manager
 
-<h3>Hangman Game</h3>
-
-<div style="display: flex; justify-content: space-between;">
-    <div>
-        <strong>Name:</strong> @SharedService.SharedUser.Name
-    </div>
-    <div>
-        <strong>Score:</strong> @score
-    </div>
-</div>
-<div style="display: flex; justify-content: space-between;">
-    <div>
-        <strong class="text-white">.</strong>
-    </div>
-    <div>
-        <strong>HighScore:</strong> @SharedService.SharedUser.HighScore
-    </div>
-</div>
-@if (!gameStarted)
-{
-    <div>
-        <label for="themeSelect">Thema auswählen:</label>
-        <select id="themeSelect" @onchange="UpdateSelectedTheme">
-            <option class="text-muted">Fach auswählen</option>
+<section class="section-top">
+    <div class="div-dark div-highscore"><p>HighScore: @SharedService.SharedUser.HighScore</p></div>
+    <div class="div-blue div-score"><p>Score: @score</p></div>
+    <div class="div-dark div-theme">
+        <select id="themeSelect" class=div-dark style="color:white; border:0px solid black" @onchange="UpdateSelectedTheme">
+            <option class="text-muted">Fach</option>
             @foreach (var theme in _context.GetThemesSeperated())
             {
                 <option value="@theme.Subject">@theme.Subject</option>
             }
         </select>
-        <button @onclick="StartGame" disabled="@(!IsValidStart())">Spiel starten</button>
     </div>
-}
-else
-{
-    <div>
-        <h4>Thema: @selectedTheme</h4>
-        <p>
-            @foreach (char letter in currentWord.ToCharArray())
-            {
-                if (guessedLetters.Contains(letter))
-                {
+    <div class="div-blue div-difficulty">Einfach
+        <div class="dropdown-content2">
+            <a href="#">Option1</a>
+            <a href="#">Option2</a>
+            <a href="#">Option3</a>
+        </div>
+    </div>
+    <div class="div-dark div-name">
+        <p>@SharedService.SharedUser.Name</p>
+    </div>
+</section>
+<section class="section-bottom">
+    @if (!gameStarted)
+    {
+        <button @onclick="StartGame" disabled="@(!IsValidStart())">Spiel starten</button>
+    }
+
+    else {
+
+        <div class="div-small">
+            @foreach (char letter in currentWord.ToCharArray()) {
+                if (guessedLetters.Contains(letter)) {
                     <span>@letter</span>
                 }
-                else
-                {
+                else {
                     <span>_ </span>
                 }
             }
-        </p>
-        <p>Erratene Buchstaben: @string.Join(", ", guessedLetters)</p>
-        <input type="text" @bind="currentGuess" maxlength="1"/>
-        <button @onclick="CheckLetter">Buchstabe raten</button>
-        <button @onclick="GiveUp">Aufgeben</button>
-        <p>@currentStatusMessage</p>
-        @if (gameWon)
-        {
-            <p>Congratulations! Du hast das Wort richtig geraten: @currentWord</p>
-            gameWon = true;
-            Console.WriteLine(SharedService.SharedUser.Name);
-            SharedService.SharedUser.HighScore = score;
-            Console.WriteLine(SharedService.SharedUser.HighScore);
-            SaveUserData();
-        }
-        @if (gameLost)
-        {
-            <p>Game Over! Das geheime Wort war: @currentWord</p>
-        }
+        </div>
+        <div class="box-size">
+            <p>Guesses: @string.Join(", ", guessedLetters)</p></div>
         <img src="hangmans/@GetHangmanDisplay(attemptsLeft)"/>
-    </div>
-}
+        <div class="box-size">
+            <input type="text" @bind="currentGuess" maxlength="1"/>
+            <button @onclick="CheckLetter">Buchstabe raten</button>
+            <button @onclick="GiveUp">Aufgeben</button>
+            <p>@currentStatusMessage</p>
+            @if (gameWon) {
+                <p>Congratulations! Du hast das Wort richtig geraten: @currentWord</p>
+                gameWon = true;
+                Console.WriteLine(SharedService.SharedUser.Name);
+                SharedService.SharedUser.HighScore = score;
+                Console.WriteLine(SharedService.SharedUser.HighScore);
+                SaveUserData();
+            }
+            @if (gameLost) {
+                <p>Game Over! Das geheime Wort war: @currentWord</p>
+            }
+            <button @onclick="BackToStart">Zurück</button>
+
+        </div>
+    }
+</section>
 
 @code {
     public GuessrContext _context = new GuessrContext();
@@ -89,17 +84,15 @@ else
     public bool gameWon = false;
     public bool gameLost = false;
     public int attemptsLeft;
-    
+
     public int score = 0;
-    
-    private void UpdateSelectedTheme(ChangeEventArgs e)
-    {
+
+    private void UpdateSelectedTheme(ChangeEventArgs e) {
         selectedTheme = e.Value.ToString();
     }
-    public void StartGame()
-    {
-        if (!string.IsNullOrEmpty(selectedTheme))
-        {
+
+    public void StartGame() {
+        if (!string.IsNullOrEmpty(selectedTheme)) {
             currentWord = GetRandomWord().ToUpper(); // Wort in Großbuchstaben für einfache Vergleiche
             gameStarted = true;
             currentStatusMessage = "";
@@ -111,65 +104,57 @@ else
             StateHasChanged(); // Ensure the state is updated
         }
     }
-    public void SaveUserData()
-    {
+
+    public void SaveUserData() {
         _context.SaveNormalScore(SharedService.SharedUser);
     }
-    public string GetRandomWord()
-    {
+
+    public string GetRandomWord() {
         List<Words> words = _context.GetWords(selectedTheme);
-        foreach (var VARIABLE in words)
-        {
+        foreach (var VARIABLE in words) {
             Console.WriteLine(VARIABLE.Word);
         }
         Random rnd = new Random();
-        int i = rnd.Next(0, words.Count-1);
+        int i = rnd.Next(0, words.Count - 1);
         string _currentWord = words[i].Word;
         return words[0].Word;
     }
 
-    public void CheckLetter()
-    {
-        if (!gameWon && !gameLost)
-        {
-            if (!string.IsNullOrEmpty(currentGuess) && currentGuess.Length == 1)
-            {
+    public void CheckLetter() {
+        if (!gameWon && !gameLost) {
+            if (!string.IsNullOrEmpty(currentGuess) && currentGuess.Length == 1) {
                 char guessedLetter = char.ToUpper(currentGuess[0]);
-                if (!guessedLetters.Contains(guessedLetter))
-                {
+                if (!guessedLetters.Contains(guessedLetter)) {
                     guessedLetters.Add(guessedLetter);
-                    if (currentWord.Contains(guessedLetter))
-                    {
-                       
+                    if (currentWord.Contains(guessedLetter) && !GuessesContainWord(currentWord, guessedLetters)) {
+
                         currentStatusMessage = $"Gut geraten! Der Buchstabe '{guessedLetter}' ist im Wort enthalten.";
                         score += 3;
                     }
-                    else
-                    {
+                    else if(!currentWord.Contains(guessedLetter)){
                         currentStatusMessage = $"Leider falsch. Der Buchstabe '{guessedLetter}' ist nicht im Wort enthalten.";
                         attemptsLeft--;
                         score -= 1;
                     }
+                    else {
+                        currentStatusMessage = $"";
+                    }
                 }
-                else
-                {
+                else {
                     currentStatusMessage = $"Du hast den Buchstaben '{guessedLetter}' bereits geraten.";
                 }
 
-                if (GuessesContainWord(currentWord, guessedLetters))
-                {
+                if (GuessesContainWord(currentWord, guessedLetters)) {
                     gameWon = true;
                     score += 10;
                 }
 
-                if (attemptsLeft == 0)
-                {
+                if (attemptsLeft == 0) {
                     gameLost = true;
                     score -= 5;
                 }
             }
-            else
-            {
+            else {
                 currentStatusMessage = "Bitte gib einen einzelnen Buchstaben ein.";
             }
 
@@ -178,18 +163,15 @@ else
         }
     }
 
-    public bool GuessesContainWord(string currentWord, List<char> guessedLetters)
-    {
-        foreach (var letter in currentWord)
-        {
+    public bool GuessesContainWord(string currentWord, List<char> guessedLetters) {
+        foreach (var letter in currentWord) {
             if (!guessedLetters.Contains(letter))
                 return false;
         }
         return true;
     }
 
-    public void GiveUp()
-    {
+    public void GiveUp() {
         gameStarted = false;
         selectedTheme = "";
         currentWord = "";
@@ -201,40 +183,28 @@ else
         StateHasChanged(); // Ensure the state is updated
     }
 
-    protected override async Task OnInitializedAsync()
-    {
+    protected override async Task OnInitializedAsync() {
         await base.OnInitializedAsync();
     }
 
-    public string GetHangmanDisplay(int attemptsLeft)
-    {
-        List<string> hangmanImages = new List<string>()
-        {
+    public string GetHangmanDisplay(int attemptsLeft) {
+        List<string> hangmanImages = new List<string>() {
             "0.png", "1.png", "2.png", "3.png", "4.png", "5.png", "6.png"
         };
 
         int index = maxAttempts - attemptsLeft;
-        if (index >= 0 && index < hangmanImages.Count)
-        {
+        if (index >= 0 && index < hangmanImages.Count) {
             return hangmanImages[index];
         }
         return hangmanImages[0]; // Default image if index is out of bounds
     }
-    
-    public bool IsValidStart()
-    {
+
+    public bool IsValidStart() {
         return !string.IsNullOrEmpty(selectedTheme);
     }
 
-    public void BackToStart()
-    {
-        manager.NavigateTo("/",true);
+    public void BackToStart() {
+        manager.NavigateTo("/", true);
     }
 
-// Hier könntest du zusätzliche Methoden für die Implementierung des Zeitmodus und anpassbarer Einstellungen hinzufügen
-}
-<button @onclick="BackToStart">Zurück</button>
-@foreach (var word in _context.GetWords(selectedTheme))
-{
-    <div>@word.Word</div>
 }
