@@ -1,120 +1,109 @@
-﻿@page "/NormalMode"
+﻿@page "/"
 @using Model.Configurations
 @using Model.Entities
 @rendermode InteractiveServer
 @inject SharedClass SharedService
 @inject NavigationManager manager
-
-<h3>Hangman Game</h3>
-<div id="container">
-    <div id="header">
-        <div>
-            <select id="themeSelect" @onchange="UpdateSelectedTheme">
-                <option class="text-muted">Thema auswählen</option>
-                @foreach (var theme in _context.GetThemesSeperated())
-                {
-                    <option value="@theme.Subject">@theme.Subject</option>
-                }
-            </select>
+<div id="obercontainer">
+    <div id="container">
+        <div id="header">
+            <div class="header-item">
+                <select id="themeSelect" @onchange="UpdateSelectedTheme">
+                    <option class="text-muted">Thema auswählen</option>
+                    @foreach (var theme in _context.GetThemesSeperated())
+                    {
+                        <option value="@theme.Subject">@theme.Subject</option>
+                    }
+                </select>
+            </div>
+            <div class="header-item">
+                <select id="themeSelect" @onchange="UpdateSelectedDifficulty">
+                    <option class="text-muted">Schwierigkeit</option>
+                    <option value="leicht">Leicht</option>
+                    <option value="mittel">Mittel</option>
+                    <option value="schwer">Schwer</option>
+                </select>
+    
+            </div>
+            <div class="header-item">
+                <strong>Name:</strong> @SharedService.SharedUser.Name
+            </div>
+            <div class="header-item">
+                <strong>Score:</strong> @score
+            </div>
+            <div class="header-item">
+                <strong>HighScore:</strong> @SharedService.SharedUser.HighScore
+            </div>
         </div>
-        <div>
-            <strong>Name:</strong> @SharedService.SharedUser.Name
-        </div>
-        <div>
-            <strong>Score:</strong> @score
-        </div>
-        <div>
-            <strong>HighScore:</strong> @SharedService.SharedUser.HighScore
-        </div>
-    </div>
-</div>
-<div style="display: flex; justify-content: space-between;">
-    <div>
-        <strong>Name:</strong> @SharedService.SharedUser.Name
-    </div>
-    <div>
-        <strong>Score:</strong> @score
-    </div>
-</div>
-<div style="display: flex; justify-content: space-between;">
-    <div>
-        <strong class="text-white">.</strong>
-    </div>
-    <div>
-        <strong>HighScore:</strong> @SharedService.SharedUser.HighScore
-    </div>
-</div>
-@if (!gameStarted)
-{
-    <div>
-        <label for="themeSelect">Thema auswählen:</label>
-        <select id="themeSelect" @onchange="UpdateSelectedTheme">
-            <option class="text-muted">Thema auswählen</option>
-            @foreach (var theme in _context.GetThemesSeperated())
-            {
-                <option value="@theme.Subject">@theme.Subject</option>
-            }
-        </select>
-    </div>
-    <div>
-        <label for="themeSelect">Schwierigkeit auswählen:</label>
-        <select id="themeSelect" @onchange="UpdateSelectedDifficulty">
-            <option class="text-muted">Schwierigkeit</option>
-            <option value="leicht">Leicht</option>
-            <option value="mittel">Mittel</option>
-            <option value="schwer">Schwer</option>
-        </select>
-        
-    </div>
-    <div>
-        <button @onclick="StartGame" disabled="@(!IsValidStart())">Spiel starten</button>
-    </div>
-}
-else
-{
-    <div>
-        <h4>Thema: @selectedTheme</h4>
-        <p>
-            @foreach (char letter in currentWord.ToCharArray())
-            {
-                if (guessedLetters.Contains(letter))
-                {
-                    <span>@letter</span>
-                }
-                else
-                {
-                    <span>_ </span>
-                }
-            }
-        </p>
-        <p>Erratene Buchstaben: @string.Join(", ", guessedLetters)</p>
-        <input type="text" @bind="currentGuess" maxlength="1"/>
-        <button @onclick="CheckLetter">Buchstabe raten</button>
-        <button @onclick="GiveUp">Aufgeben</button>
-        <p>@currentStatusMessage</p>
-        @if (gameWon)
+    
+        @if (!gameStarted)
         {
-            <p>Congratulations! Du hast das Wort richtig geraten: @currentWord</p>
-            gameWon = true;
-            if (SharedService.playedAgain == true && SharedService.SavedScore > SharedService.SharedUser.HighScore)
-            {
-                SharedService.SharedUser.HighScore = SharedService.SavedScore;
-            }
-
-            if (score > SharedService.SharedUser.HighScore)
-            {
-                SharedService.SharedUser.HighScore = score;
-            }
-
-            SaveUserData();
+            <div id="start-btn">
+                <div>
+                    <button class="start-btn" @onclick="StartGame" disabled="@(!IsValidStart())">Spiel starten</button>
+                </div>
+            </div>
         }
-        @if (gameLost)
+        else
         {
-            <p>Game Over! Das geheime Wort war: @currentWord</p>
+            <div class="guessedWord">
+                @foreach (char letter in currentWord.ToCharArray())
+                {
+                    if (guessedLetters.Contains(letter))
+                    {
+                        <span>@letter</span>
+                    }
+                    else
+                    {
+                        <span>_ </span>
+                    }
+                }
+            </div>
+            <div class="guessing">
+                
+                <div class="letters">
+                    <div style="font-size: xx-large;margin-top: 10px;">Buchstabe eingeben</div>
+                    <input type="text" style="margin-top: 10px;" @bind="currentGuess" maxlength="1"/>
+                    <button class="btn-blue" style="margin-top: 10px;" @onclick="CheckLetter">Buchstabe raten</button>
+                    <button class="btn-blue" style="margin-top: 10px;" @onclick="GiveUp">Aufgeben</button>
+                    <div class="wrap text-current" style="text-align: center; margin-top: 5px;">@currentStatusMessage</div>
+                    @if (gameWon)
+                    {
+                        <p class="wrap">Congratulations! Du hast das Wort richtig geraten: @currentWord</p>
+                        gameWon = true;
+                        if (SharedService.playedAgain == true && SharedService.SavedScore > SharedService.SharedUser.HighScore)
+                        {
+                            SharedService.SharedUser.HighScore = SharedService.SavedScore;
+                        }
+
+                        if (score > SharedService.SharedUser.HighScore)
+                        {
+                            SharedService.SharedUser.HighScore = score;
+                        }
+
+                        SaveUserData();
+                    }
+                    @if (gameLost)
+                    {
+                        <p class="wrap" style="margin-top: 10px">Game Over! Das geheime Wort war: @currentWord</p>
+                    }
+                    <img class="picture" src="hangmans/@GetHangmanDisplay(attemptsLeft)"/>
+                </div>
+                <div class="used-letters">
+                    <div style="font-size: xx-large">Verwendete Buchstaben</div>
+                    <p style="text-align: center;">@string.Join(",", guessedLetters)</p>
+                </div>
+                
+            </div>
         }
-        <img src="hangmans/@GetHangmanDisplay(attemptsLeft)"/>
+        <div class="downbuttons">
+            <button class="btn-blue" style="margin:10px;" @onclick="Again" disabled="@(gameWon == false)">Weiterspielen</button>
+            <button class="btn-blue" style="margin:10px;"@onclick="End">Beenden</button>
+        </div>
     </div>
-}
+</div>
+
+
 
 @code {
     public GuessrContext _context = new GuessrContext();
@@ -213,7 +202,7 @@ else
                 {
                     int i = rnd.Next(0, list.Count);
                     Console.WriteLine(list[i].wo + " " + list[i].di);
-                    return list[0].wo;
+                    return list[i].wo;
                 }
             }
             else if (Difficulty == EDIFFICULTY.MEDIUM)
@@ -223,7 +212,7 @@ else
                 {
                     int i = rnd.Next(0, list.Count);
                     Console.WriteLine(list[i].wo + " " + list[i].di);
-                    return list[0].wo;
+                    return list[i].wo;
                 }
             }
             else if (Difficulty == EDIFFICULTY.HARD)
@@ -233,44 +222,11 @@ else
                 {
                     int i = rnd.Next(0, list.Count);
                     Console.WriteLine(list[i].wo + " " + list[i].di);
-                    return list[0].wo;
+                    return list[i].wo;
                 }
             }
         }
-
-        /*foreach (var x in grouped)
-        {
-            if (Difficulty == EDIFFICULTY.EASY)
-            {
-                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.EASY).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
-                if (list.Count > 0)
-                {
-                    int i = rnd.Next(0, list.Count);
-                    Console.WriteLine(list[i].wo + " " + list[i].di);
-                    return list[i].wo;
-                }
-            }
-            else if (Difficulty == EDIFFICULTY.MEDIUM)
-            {
-                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.MEDIUM).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
-                if (list.Count > 0)
-                {
-                    int i = rnd.Next(0, list.Count);
-                    Console.WriteLine(list[i].wo + " " + list[i].di);
-                    return list[i].wo;
-                }
-            }
-            else if (Difficulty == EDIFFICULTY.HARD)
-            {
-                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.HARD).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
-                if (list.Count > 0)
-                {
-                    int i = rnd.Next(0, list.Count);
-                    Console.WriteLine(list[i].wo + " " + list[i].di);
-                    return list[i].wo;
-                }
-            }
-        }*/
+        
         return words[0].Word;
     }
 
@@ -402,9 +358,3 @@ else
 // Hier könntest du zusätzliche Methoden für die Implementierung des Zeitmodus und anpassbarer Einstellungen hinzufügen
 }
 
-<button @onclick="Again" disabled="@(gameWon == false)">Weiterspielen</button>
-<button @onclick="End">Beenden</button>
-@foreach (var word in _context.GetWords(selectedTheme))
-{
-    <div>@word.Word</div>
-}
