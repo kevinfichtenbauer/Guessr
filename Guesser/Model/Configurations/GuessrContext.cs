@@ -92,7 +92,7 @@ public class GuessrContext:DbContext
         }
         else
         {
-            Users.Add(new User() { Name = user.Name, HighScore = user.HighScore });
+            Users.Add(new User() { Name = user.Name, HighScoreSec = user.HighScoreSec, TimeHighScore = user.TimeHighScore });
         }
 
         this.SaveChanges();

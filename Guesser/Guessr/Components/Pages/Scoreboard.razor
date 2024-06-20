@@ -18,6 +18,7 @@
             <p>Schnellste Zeit: @SharedService.SharedUser.HighScoreSec</p>
         }
         <button class="text-dark" @onclick="Update">Highscore ansehen</button>
+        <button class="text-dark" @onclick="Again">noch einmal</button>
     </div>
     
 </div>
@@ -25,6 +26,7 @@
     private bool updated = false;
     private void Update()
     {
+        StateHasChanged();
         updated = true;
         Users = SharedService.Context.GetUsers();
         for (int i = 0; i < Users.Count; i++)
@@ -37,6 +39,11 @@
             }
         }
         
+    }
+    private void Again()
+    {
+        manager.NavigateTo("/");
+        StateHasChanged();
     }
     public List<User> Users = new List<User>();
 }

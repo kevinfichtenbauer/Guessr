@@ -55,7 +55,7 @@ public class SharedClass
     public GuessrContext Context = new GuessrContext();
     public int SavedScore { get; set; } = 0;
     public int TimeSavedSec { get; set; } = 0;
-    public bool playedAgain { get; set; } = false;
     public int RemainingTime { get; set; } = 0;
     public int elapsedSavedTime { get; set; } = 0;
+    public bool playedAgain { get; set; } = false;
 }
