@@ -34,6 +34,15 @@
                 <option value="@theme.Subject">@theme.Subject</option>
             }
         </select>
+    </div>
+    <div>
+        <label for="themeSelect">Schwierigkeit auswählen:</label>
+        <select id="themeSelect" @onchange="UpdateSelectedDifficulty">
+            <option class="text-muted">Schwierigkeit</option>
+            <option value="leicht">Leicht</option>
+            <option value="mittel">Mittel</option>
+            <option value="schwer">Schwer</option>
+        </select>
         <button @onclick="StartGame" disabled="@(!IsValidStart())">Spiel starten</button>
     </div>
 }
@@ -85,13 +94,29 @@ else
     public string currentGuess = "";
     public string currentStatusMessage = "";
     public int maxAttempts = 6; // Maximale Anzahl von Versuchen
+    public EDIFFICULTY Difficulty = EDIFFICULTY.none;
 
     public bool gameWon = false;
     public bool gameLost = false;
     public int attemptsLeft;
     
     public int score = 0;
-    
+
+    private void UpdateSelectedDifficulty(ChangeEventArgs e)
+    {
+        if (e.Value == "leicht")
+        {
+            Difficulty = EDIFFICULTY.EASY;
+        }
+        if (e.Value == "mittel")
+        {
+            Difficulty = EDIFFICULTY.MEDIUM;
+        }
+        if (e.Value == "schwer")
+        {
+            Difficulty = EDIFFICULTY.HARD;
+        }
+    }
     private void UpdateSelectedTheme(ChangeEventArgs e)
     {
         selectedTheme = e.Value.ToString();
@@ -100,6 +125,7 @@ else
     {
         if (!string.IsNullOrEmpty(selectedTheme))
         {
+            
             currentWord = GetRandomWord().ToUpper(); // Wort in Großbuchstaben für einfache Vergleiche
             gameStarted = true;
             currentStatusMessage = "";

@@ -15,6 +15,22 @@
         <strong>Score:</strong> @score
     </div>
 </div>
+<div style="display: flex; justify-content: space-between;">
+    <div>
+        <strong class="text-white">.</strong>
+    </div>
+    <div>
+        <strong>HighScore:</strong> @SharedService.SharedUser.TimeHighScore
+    </div>
+</div>
+<div style="display: flex; justify-content: space-between;">
+    <div>
+        <strong class="text-white">.</strong>
+    </div>
+    <div>
+        <strong>Sekunden HighScore:</strong> @SharedService.SharedUser.HighScoreSec
+    </div>
+</div>
 <div>
     <strong>Timer:</strong> @remainingTime seconds
 </div>
@@ -36,8 +52,7 @@
         <button @onclick="StartGame" disabled="@(!IsValidStart())">Spiel starten</button>
     </div>
 }
-else
-{
+else{
     <div>
         <h4>Thema: @selectedTheme</h4>
         <p>
@@ -66,6 +81,12 @@ else
         {
             <p>Congratulations! Du hast das Wort richtig geraten: @currentWord</p>
             gameWon = true;
+            SharedService.SharedUser.HighScoreSec = elapsedTime;
+            SharedService.SharedUser.TimeHighScore = score;
+            Console.WriteLine(SharedService.SharedUser.TimeHighScore);
+            Console.WriteLine(SharedService.SharedUser.HighScoreSec);
+            SaveUserData();
+            
         }
         @if (gameLost)
         {
@@ -96,6 +117,11 @@ else
 
     public Timer timer;
     public int elapsedTime;
+
+    public void SaveUserData()
+    {
+        _context.SaveTimeScore(SharedService.SharedUser);
+    }
     
     private void UpdateSelectedTheme(ChangeEventArgs e)
     {
@@ -127,7 +153,7 @@ else
         Random rnd = new Random();
         int i = rnd.Next(0, words.Count-1);
         string _currentWord = words[i].Word;
-        return _currentWord;
+        return words[0].Word;
     }
 
     public void CheckLetter()
