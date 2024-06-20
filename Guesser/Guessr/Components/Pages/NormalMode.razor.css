@@ -1,0 +1,14 @@
+﻿#container{
+    width: 100vw;
+    height: 100vh;
+    background-color: red;
+    display: flex;
+    flex-direction: column;
+}
+#header{
+    width: 100%;
+    height: max-content;
+    background-color: orange;
+    display: flex;
+    flex-direction: row;
+}

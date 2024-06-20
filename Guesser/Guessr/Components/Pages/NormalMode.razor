@@ -6,7 +6,28 @@
 @inject NavigationManager manager
 
 <h3>Hangman Game</h3>
-
+<div id="container">
+    <div id="header">
+        <div>
+            <select id="themeSelect" @onchange="UpdateSelectedTheme">
+                <option class="text-muted">Thema auswählen</option>
+                @foreach (var theme in _context.GetThemesSeperated())
+                {
+                    <option value="@theme.Subject">@theme.Subject</option>
+                }
+            </select>
+        </div>
+        <div>
+            <strong>Name:</strong> @SharedService.SharedUser.Name
+        </div>
+        <div>
+            <strong>Score:</strong> @score
+        </div>
+        <div>
+            <strong>HighScore:</strong> @SharedService.SharedUser.HighScore
+        </div>
+    </div>
+</div>
 <div style="display: flex; justify-content: space-between;">
     <div>
         <strong>Name:</strong> @SharedService.SharedUser.Name
@@ -28,7 +49,7 @@
     <div>
         <label for="themeSelect">Thema auswählen:</label>
         <select id="themeSelect" @onchange="UpdateSelectedTheme">
-            <option class="text-muted">Fach auswählen</option>
+            <option class="text-muted">Thema auswählen</option>
             @foreach (var theme in _context.GetThemesSeperated())
             {
                 <option value="@theme.Subject">@theme.Subject</option>
