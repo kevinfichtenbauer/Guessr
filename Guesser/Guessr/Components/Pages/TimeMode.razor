@@ -13,19 +13,69 @@
         <strong>Name:</strong> @SharedService.SharedUser.Name
     </div>
     <div>
-        <strong>HighScore:</strong> @SharedService.SharedUser.TimeHighScore
+        <strong class="text-white">.</strong>
     </div>
 </div>
 <div style="display: flex; justify-content: space-between;">
-    <div>
-        <strong class="text-white">.</strong>
-    </div>
-    <div>
-        <strong>Sekunden HighScore:</strong> @SharedService.SharedUser.HighScoreSec
-    </div>
+    @if (SharedService.playedAgain == true)
+    {
+        <div>
+            <strong>Score: </strong> @SharedService.SavedScore
+        </div>
+        <div>
+            <strong>HighScore:</strong> @SharedService.SharedUser.TimeHighScore
+        </div>
+    }
+    else
+    {
+        <div>
+            <strong>Score: </strong> @score
+        </div>
+        <div>
+            <strong>HighScore:</strong> @SharedService.SharedUser.TimeHighScore
+        </div>
+    }
 </div>
-<div>
-    <strong>Timer:</strong> @remainingTime seconds
+<div style="display: flex; justify-content: space-between;">
+    @if (SharedService.playedAgain == true)
+    {
+        <div>
+            <strong>Timer:</strong> @SharedService.elapsedSavedTime s
+        </div>
+        <div>
+            <strong>Sekunden HighScore:</strong> @SharedService.SharedUser.HighScoreSec
+        </div>
+    }
+    else
+    {
+        <div>
+            <strong>Zeit gebraucht:</strong> @elapsedTime s
+        </div>
+        <div>
+            <strong>Sekunden HighScore:</strong> @SharedService.SharedUser.HighScoreSec
+        </div>
+    }
+    
+</div>
+<div style="display: flex; justify-content: space-between;">
+    @if (SharedService.playedAgain == true)
+    {
+        <div>
+            <strong>Timer:</strong>noch @SharedService.RemainingTime s
+        </div>
+        <div>
+            <strong class="text-white">.</strong>
+        </div>
+    }
+    else
+    {
+        <div>
+            <strong>Timer:</strong>noch @remainingTime s
+        </div>
+        <div>
+            <strong class="text-white">.</strong>
+        </div>
+    }
 </div>
 @if (!gameStarted)
 {
@@ -51,7 +101,10 @@
     <div>
         <div>
             <label for="timeSelect">Zeit auswählen (in Sekunden):</label>
-            <input type="number" id="timeSelect" @bind="remainingTime" min="10"/>
+            @if (SharedService.playedAgain == false)
+            {
+                <input type="number" id="timeSelect" @bind="remainingTime" min="10"/>
+            }
         </div>
     </div>
     <div>
@@ -163,6 +216,7 @@ else
         {
             score = SharedService.SavedScore;
             remainingTime = SharedService.RemainingTime;
+            elapsedTime = SharedService.elapsedSavedTime;
             if (!string.IsNullOrEmpty(selectedTheme) && remainingTime > 0)
             {
                 // Hier kannst du die Logik für die Wortauswahl je nach Thema implementieren
@@ -400,14 +454,18 @@ else
     }
     public void Again()
     {
-        Console.WriteLine(score);
-        SharedService.SavedScore += score;
-        SharedService.TimeSavedSec = remainingTime;
-        score = 0;
-        remainingTime = 0;
+        SharedService.SavedScore += (score-SharedService.SavedScore);
+        SharedService.RemainingTime = remainingTime;
+        SharedService.elapsedSavedTime += (elapsedTime-SharedService.elapsedSavedTime);
+        score = SharedService.SavedScore;
+        remainingTime = SharedService.RemainingTime;
+        elapsedTime = SharedService.elapsedSavedTime;
         SharedService.playedAgain = true;
-        if (SharedService.SavedScore > SharedService.SharedUser.HighScore)
-            SharedService.SharedUser.HighScore = SharedService.SavedScore;
+        if (SharedService.SavedScore > SharedService.SharedUser.TimeHighScore || SharedService.TimeSavedSec < SharedService.SharedUser.HighScoreSec)
+        {
+            SharedService.SharedUser.TimeHighScore = SharedService.SavedScore;
+            SharedService.SharedUser.HighScoreSec = SharedService.TimeSavedSec;
+        }
         SaveUserData();
         manager.NavigateTo("/TimeMode", true);
         StateHasChanged();

@@ -57,4 +57,5 @@ public class SharedClass
     public int TimeSavedSec { get; set; } = 0;
     public bool playedAgain { get; set; } = false;
     public int RemainingTime { get; set; } = 0;
+    public int elapsedSavedTime { get; set; } = 0;
 }
