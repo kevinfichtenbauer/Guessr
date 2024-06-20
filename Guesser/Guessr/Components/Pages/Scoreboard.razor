@@ -1,4 +1,4 @@
-﻿@page "/End"
+﻿@page "/Scoreboard"
 @using Model.Entities
 @rendermode InteractiveServer
 @inject SharedClass SharedService
@@ -6,10 +6,11 @@
 @inject IJSRuntime JS
 <div id="main-container">
     <div id="content">
+        <h3>Spiel beendet</h3>
         @if (updated == true)
         {
-            <h3>Spiel beendet</h3>
-            <p>@SharedService.SharedUser.Name</p>
+
+            <p class="text-danger">Username: @SharedService.SharedUser.Name</p>
             <p>Normaler Modus</p>
             <p>HighScore: @SharedService.SharedUser.HighScore</p>
             <p>Zeitmodus</p>

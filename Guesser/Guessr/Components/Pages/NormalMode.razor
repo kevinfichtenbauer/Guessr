@@ -76,6 +76,10 @@ else
             {
                 SharedService.SharedUser.HighScore = SharedService.SavedScore;
             }
+            if (score > SharedService.SharedUser.HighScore)
+            {
+                SharedService.SharedUser.HighScore = score;
+            }
             SaveUserData();
         }
         @if (gameLost)
@@ -340,7 +344,7 @@ else
         Console.WriteLine(SharedService.SharedUser.HighScore);
         SharedService.SavedScore = 0;
         SaveUserData();
-        manager.NavigateTo("/End",true);
+        manager.NavigateTo("/Scoreboard",true);
         StateHasChanged();
     }
 // Hier könntest du zusätzliche Methoden für die Implementierung des Zeitmodus und anpassbarer Einstellungen hinzufügen
