@@ -67,5 +67,22 @@
     background-color: #4c5a70;
     font-size: large;
     color:white;
-    margin-top: 20px;
+}
+input{
+    background-color: white;
+    border:transparent;
+    color:black;
+    font-size: large;
+}
+input:focus{
+    background-color: white;
+    outline-color: #7b8fa1;
+    border-color:transparent;
+    color:black;
+}
+input:active{
+    background-color: white;
+    outline-color: #7b8fa1;
+    border-color:transparent;
+    color:black;
 }
