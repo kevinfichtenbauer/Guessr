@@ -12,10 +12,10 @@
         <input class="text-dark" type="text" @bind="SharedService.SharedUser.Name"/>
         <br/>
           <!--<label for="modes">Modus wählen:</label>-->
-        <select class="text-dark" name="modes" id="modes" @onchange="UpdateMode">
-            <option class="text-dark">Modus wählen</option>
-            <option class="text-dark" value="Normal">Normal</option>
-            <option class="text-dark" value="Time">Time</option>
+        <select class="btn-blue" name="modes" id="modes" @onchange="UpdateMode">
+            <option class="">Modus wählen</option>
+            <option class="" value="Normal">Normal</option>
+            <option class="" value="Time">Time</option>
         </select>
         <button class="button" @onclick="NavigateHome">Anmelden</button>
     </div>
