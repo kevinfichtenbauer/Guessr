@@ -478,10 +478,3 @@
 
 // Hier könntest du zusätzliche Methoden für die Implementierung des Zeitmodus und anpassbarer Einstellungen hinzufügen
 }
-
-<button @onclick="Again" disabled="@(gameWon == false)">Weiterspielen</button>
-<button @onclick="End">Beenden</button>
-@foreach (var word in _context.GetWords(selectedTheme))
-{
-    <div>@word.Word</div>
-}
