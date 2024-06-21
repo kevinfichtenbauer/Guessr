@@ -6,163 +6,118 @@
 @inject SharedClass SharedService
 @inject NavigationManager manager
 
-<h3>Hangman Game</h3>
-
-<div style="display: flex; justify-content: space-between;">
-    <div>
-        <strong>Name:</strong> @SharedService.SharedUser.Name
-    </div>
-    <div>
-        <strong class="text-white">.</strong>
-    </div>
-</div>
-<div style="display: flex; justify-content: space-between;">
-    @if (SharedService.playedAgain == true)
-    {
-        <div>
-            <strong>Score: </strong> @SharedService.SavedScore
-        </div>
-        <div>
-            <strong>HighScore:</strong> @SharedService.SharedUser.TimeHighScore
-        </div>
-    }
-    else
-    {
-        <div>
-            <strong>Score: </strong> @score
-        </div>
-        <div>
-            <strong>HighScore:</strong> @SharedService.SharedUser.TimeHighScore
-        </div>
-    }
-</div>
-<div style="display: flex; justify-content: space-between;">
-    @if (SharedService.playedAgain == true)
-    {
-        <div>
-            <strong>Timer:</strong> @SharedService.elapsedSavedTime s
-        </div>
-        <div>
-            <strong>Sekunden HighScore:</strong> @SharedService.SharedUser.HighScoreSec
-        </div>
-    }
-    else
-    {
-        <div>
-            <strong>Zeit gebraucht:</strong> @elapsedTime s
-        </div>
-        <div>
-            <strong>Sekunden HighScore:</strong> @SharedService.SharedUser.HighScoreSec
-        </div>
-    }
-
-</div>
-<div style="display: flex; justify-content: space-between;">
-    @if (SharedService.playedAgain == true)
-    {
-        <div>
-            <strong>Verbleibende Zeit:</strong>@SharedService.RemainingTime
-        </div>
-        <div>
-            <strong class="text-white">.</strong>
-        </div>
-    }
-    else
-    {
-        <div>
-            <strong>Verbleibende Zeit:</strong>@remainingTime
-        </div>
-        <div>
-            <strong class="text-white">.</strong>
-        </div>
-    }
-</div>
-@if (!gameStarted)
-{
-    <div>
-        <label for="themeSelect">Thema auswählen:</label>
-        <select id="themeSelect" @onchange="UpdateSelectedTheme">
-            <option class="text-muted">Fach auswählen</option>
-            @foreach (var theme in _context.GetThemesSeperated())
+<div id="obercontainer">
+    <div id="container">
+        <div id="header">
+            <div class="header-item">
+                <select id="themeSelect" @onchange="UpdateSelectedTheme">
+                    <option class="text-muted">Thema auswählen</option>
+                    @foreach (var theme in _context.GetThemesSeperated())
+                    {
+                        <option value="@theme.Subject">@theme.Subject</option>
+                    }
+                </select>
+            </div>
+            <div class="header-item">
+                <select id="themeSelect" @onchange="UpdateSelectedDifficulty">
+                    <option class="text-muted">Schwierigkeit</option>
+                    <option value="leicht">Leicht</option>
+                    <option value="mittel">Mittel</option>
+                    <option value="schwer">Schwer</option>
+                </select>
+            </div>
+            <div class="header-item">
+                <strong>Name:</strong> @SharedService.SharedUser.Name
+            </div>
+            @if (SharedService.playedAgain == true)
             {
-                <option value="@theme.Subject">@theme.Subject</option>
+                <div class="header-item">
+                    <strong>Score: </strong> @SharedService.SavedScore
+                </div>
+                <div class="header-item">
+                    <strong>Verbleibende Zeit:</strong>@SharedService.RemainingTime
+                </div>
             }
-        </select>
-    </div>
-    <div>
-        <label for="themeSelect">Schwierigkeit auswählen:</label>
-        <select id="themeSelect" @onchange="UpdateSelectedDifficulty">
-            <option class="text-muted">Schwierigkeit</option>
-            <option value="leicht">Leicht</option>
-            <option value="mittel">Mittel</option>
-            <option value="schwer">Schwer</option>
-        </select>
-    </div>
-    <div>
-        <div>
-            <label for="timeSelect">Zeit auswählen (in Sekunden):</label>
-            @if (SharedService.playedAgain == false)
+            else
             {
-                <input type="number" id="timeSelect" @bind="remainingTime" min="10"/>
+                <div class="header-item">
+                    <strong>Score: </strong> @score
+                </div>
+                <div class="header-item">
+                    <strong>Verbleibende Zeit:</strong>@remainingTime
+                </div>
             }
         </div>
-    </div>
-    <div>
-        <button @onclick="StartGame" disabled="@(!IsValidStart())">Spiel starten</button>
-    </div>
-}
-else
-{
-    <div>
-        <h4>Thema: @selectedTheme</h4>
-        <p>
-            @foreach (char letter in currentWord.ToCharArray())
-            {
-                if (guessedLetters.Contains(letter))
+        @if (!gameStarted)
+        {
+            <div id="start-btn">
+                <div>
+                    <button class="start-btn" @onclick="StartGame" disabled="@(!IsValidStart())">Spiel starten</button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="guessedWord">
+                @foreach (char letter in currentWord.ToCharArray())
                 {
-                    <span>@letter</span>
+                    if (guessedLetters.Contains(letter))
+                    {
+                        <span>@letter</span>
+                    }
+                    else
+                    {
+                        <span>_ </span>
+                    }
                 }
-                else
-                {
-                    <span>_ </span>
-                }
-            }
-        </p>
-        <p>Erratene Buchstaben: @string.Join(", ", guessedLetters)</p>
-        <input type="text" @bind="currentGuess" maxlength="1"/>
-        <button @onclick="CheckLetter">Buchstabe raten</button>
-        <button @onclick="GiveUp">Aufgeben</button>
-        <p>@currentStatusMessage</p>
-        @if (timeMode)
-        {
-            <p>Verbleibende Zeit: @remainingTime seconds</p>
+            </div>
+            <div class="guessing">
+                <div class="letters">
+                    <div style="font-size: xx-large;margin-top: 10px;">Buchstabe eingeben</div>
+                    <input type="text" style="margin-top: 10px;" @bind="currentGuess" maxlength="1"/>
+                    <button class="btn-blue" style="margin-top: 10px;" @onclick="CheckLetter">Buchstabe raten</button>
+                    <button class="btn-blue" style="margin-top: 10px;" @onclick="GiveUp">Aufgeben</button>
+                    <div class="wrap text-current" style="text-align: center; margin-top: 5px;">@currentStatusMessage</div>
+                    @if (timeMode)
+                    {
+                        <p>Verbleibende Zeit: @remainingTime seconds</p>
+                    }
+                    @if (gameWon)
+                    {
+                        <p class="wrap">Congratulations! Du hast das Wort richtig geraten: @currentWord</p>
+                        gameWon = true;
+                        if (SharedService.playedAgain == true && (SharedService.SavedScore > SharedService.SharedUser.TimeHighScore || SharedService.TimeSavedSec < SharedService.SharedUser.HighScoreSec))
+                        {
+                            SharedService.SharedUser.TimeHighScore = SharedService.SavedScore;
+                            SharedService.SharedUser.HighScoreSec = SharedService.TimeSavedSec;
+                        }
+                    
+                        if (score > SharedService.SharedUser.TimeHighScore || elapsedTime < SharedService.SharedUser.HighScoreSec)
+                        {
+                            SharedService.SharedUser.TimeHighScore = score;
+                            SharedService.SharedUser.HighScoreSec = elapsedTime;
+                        }
+                    
+                        SaveUserData();
+                    }
+                    @if (gameLost)
+                    {
+                        <p>Game Over! Das geheime Wort war: @currentWord</p>
+                    }
+                    <img src="hangmans/@GetHangmanDisplay(attemptsLeft)"/>
+                </div>
+                <div class="used-letters">
+                    <div style="font-size: xx-large">Verwendete Buchstaben</div>
+                    <p style="text-align: center;">@string.Join(",", guessedLetters)</p>
+                </div>
+            </div>
         }
-        @if (gameWon)
-        {
-            <p>Congratulations! Du hast das Wort richtig geraten: @currentWord</p>
-            gameWon = true;
-            if (SharedService.playedAgain == true && (SharedService.SavedScore > SharedService.SharedUser.TimeHighScore || SharedService.TimeSavedSec < SharedService.SharedUser.HighScoreSec))
-            {
-                SharedService.SharedUser.TimeHighScore = SharedService.SavedScore;
-                SharedService.SharedUser.HighScoreSec = SharedService.TimeSavedSec;
-            }
-
-            if (score > SharedService.SharedUser.TimeHighScore || elapsedTime < SharedService.SharedUser.HighScoreSec)
-            {
-                SharedService.SharedUser.TimeHighScore = score;
-                SharedService.SharedUser.HighScoreSec = elapsedTime;
-            }
-
-            SaveUserData();
-        }
-        @if (gameLost)
-        {
-            <p>Game Over! Das geheime Wort war: @currentWord</p>
-        }
-        <img src="hangmans/@GetHangmanDisplay(attemptsLeft)"/>
+        <div class="downbuttons">
+            <button class="btn-blue" style="margin:10px;" @onclick="Again" disabled="@(gameWon == false)">Weiterspielen</button>
+            <button class="btn-blue" style="margin:10px;"@onclick="End">Beenden</button>
+        </div>
     </div>
-}
-
+</div>
 @code {
     public GuessrContext _context = new GuessrContext();
     public bool gameStarted = false;
@@ -223,7 +178,7 @@ else
         }
         else
         {
-            score = 0; 
+            score = 0;
             elapsedTime = 0;
         }
 
@@ -242,50 +197,6 @@ else
             StateHasChanged();
         }
     }
-    /*public void StartGame()
-    {
-        if (SharedService.playedAgain == true)
-        {
-            score = SharedService.SavedScore;
-            remainingTime = SharedService.RemainingTime;
-            elapsedTime = SharedService.elapsedSavedTime;
-            if (!string.IsNullOrEmpty(selectedTheme) && remainingTime > 0)
-            {
-                // Hier kannst du die Logik für die Wortauswahl je nach Thema implementieren
-                currentWord = GetRandomWord().ToUpper(); // Wort in Großbuchstaben für einfache Vergleiche
-                gameStarted = true;
-                currentStatusMessage = "";
-                guessedLetters.Clear();
-                currentGuess = "";
-                attemptsLeft = maxAttempts;
-                gameWon = false;
-                gameLost = false;
-                StateHasChanged(); // Ensure the state is updated
-            }
-        }
-        if (SharedService.playedAgain == false)
-        {
-            score = 0;
-            SharedService.RemainingTime = 0;
-            if (!string.IsNullOrEmpty(selectedTheme) && remainingTime > 0)
-            {
-                // Hier kannst du die Logik für die Wortauswahl je nach Thema implementieren
-                currentWord = GetRandomWord().ToUpper(); // Wort in Großbuchstaben für einfache Vergleiche
-                gameStarted = true;
-                currentStatusMessage = "";
-                guessedLetters.Clear();
-                currentGuess = "";
-                attemptsLeft = maxAttempts;
-                gameWon = false;
-                gameLost = false;
-                elapsedTime = 0;
-                timer?.Dispose();
-                timer = new Timer(TimerTick, null, 1000, 1000);
-                StateHasChanged(); // Ensure the state is updated
-            }
-        }
-
-    }*/
 
     public string GetRandomWord()
     {
@@ -302,7 +213,7 @@ else
                 {
                     int i = rnd.Next(0, list.Count);
                     Console.WriteLine(list[i].wo + " " + list[i].di);
-                    return list[0].wo;
+                    return list[i].wo;
                 }
             }
             else if (Difficulty == EDIFFICULTY.MEDIUM)
@@ -312,7 +223,7 @@ else
                 {
                     int i = rnd.Next(0, list.Count);
                     Console.WriteLine(list[i].wo + " " + list[i].di);
-                    return list[0].wo;
+                    return list[i].wo;
                 }
             }
             else if (Difficulty == EDIFFICULTY.HARD)
@@ -322,45 +233,11 @@ else
                 {
                     int i = rnd.Next(0, list.Count);
                     Console.WriteLine(list[i].wo + " " + list[i].di);
-                    return list[0].wo;
+                    return list[i].wo;
                 }
             }
         }
-
-        /*foreach (var x in grouped)
-        {
-            if (Difficulty == EDIFFICULTY.EASY)
-            {
-                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.EASY).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
-                if (list.Count > 0)
-                {
-                    int i = rnd.Next(0, list.Count);
-                    Console.WriteLine(list[i].wo + " " + list[i].di);
-                    return list[i].wo;
-                }
-            }
-            else if (Difficulty == EDIFFICULTY.MEDIUM)
-            {
-                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.MEDIUM).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
-                if (list.Count > 0)
-                {
-                    int i = rnd.Next(0, list.Count);
-                    Console.WriteLine(list[i].wo + " " + list[i].di);
-                    return list[i].wo;
-                }
-            }
-            else if (Difficulty == EDIFFICULTY.HARD)
-            {
-                var list = x.sorted.Where(s => s.Difficulty == EDIFFICULTY.HARD).Select(s => new { wo = s.Word, di = s.Difficulty }).ToList();
-                if (list.Count > 0)
-                {
-                    int i = rnd.Next(0, list.Count);
-                    Console.WriteLine(list[i].wo + " " + list[i].di);
-                    return list[i].wo;
-                }
-            }
-        }*/
-        return words[0].Word;
+        return "1";
     }
 
     public void CheckLetter()
@@ -412,6 +289,7 @@ else
                     currentStatusMessage = "Bitte gib einen einzelnen Buchstaben ein.";
                 }
             }
+
             currentGuess = "";
             InvokeAsync(StateHasChanged);
         }
@@ -462,11 +340,12 @@ else
                     currentStatusMessage = "Bitte gib einen einzelnen Buchstaben ein.";
                 }
             }
+
             currentGuess = "";
             InvokeAsync(StateHasChanged);
         }
     }
-    
+
     public bool GuessesContainWord(string currentWord, List<char> guessedLetters)
     {
         foreach (var letter in currentWord)
@@ -551,23 +430,7 @@ else
                 InvokeAsync(() => { StateHasChanged(); });
             }
         }
-        
     }
-    /*public void TimerTick(object state)
-    {
-        if (gameStarted && remainingTime > 0)
-        {
-            remainingTime--;
-            elapsedTime++;
-            if (remainingTime == 0)
-            {
-                gameLost = true;
-                currentStatusMessage = "Zeit abgelaufen! Du hast verloren.";
-                timer?.Dispose();
-            }
-            InvokeAsync(StateHasChanged);
-        }
-    }*/
 
     public bool IsValidStart()
     {
@@ -585,6 +448,7 @@ else
             SharedService.SharedUser.TimeHighScore = SharedService.SavedScore;
             SharedService.SharedUser.HighScoreSec = SharedService.elapsedSavedTime;
         }
+
         SaveUserData();
         StateHasChanged(); // Ensure the state is updated before navigation
         manager.NavigateTo("/TimeMode", true);
@@ -595,16 +459,18 @@ else
         Console.WriteLine(SharedService.SharedUser.TimeHighScore);
         Console.WriteLine(SharedService.SavedScore);
         Console.WriteLine(SharedService.TimeSavedSec);
-        if(SharedService.SharedUser.TimeHighScore == 0||SharedService.SharedUser.HighScoreSec == 0)
+        if (SharedService.SharedUser.TimeHighScore == 0 || SharedService.SharedUser.HighScoreSec == 0)
         {
             SharedService.SharedUser.TimeHighScore = SharedService.SavedScore;
             SharedService.SharedUser.HighScoreSec = SharedService.elapsedSavedTime;
         }
+
         if (SharedService.SavedScore > SharedService.SharedUser.TimeHighScore || SharedService.elapsedSavedTime < SharedService.SharedUser.HighScoreSec)
         {
             SharedService.SharedUser.TimeHighScore = SharedService.SavedScore;
             SharedService.SharedUser.HighScoreSec = SharedService.elapsedSavedTime;
         }
+
         SaveUserData();
         manager.NavigateTo("/Scoreboard", true);
         StateHasChanged();
