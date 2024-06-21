@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.JavaScript;
 using Microsoft.EntityFrameworkCore;
+using Model.Configurations;
 
 namespace Model.Entities;
 public enum ESUBJECTS {SEW,MEDT,INSY,SYTB,SYTE,NWTK,ITP}
@@ -16,10 +17,12 @@ public class User
     public string Name { get; set; }
     [Column("HIGHSCORE")]
     public int HighScore { get; set; }
+    [Column("TIMESCORE_HIGHSCORE")]
+    public int TimeHighScore { get; set; }
     [Column("TIMESCORE_SEC")]
     public int HighScoreSec { get; set; }
 }
-public enum EDIFFICULTY{EASY,MEDIUM,HARD}
+public enum EDIFFICULTY{EASY,MEDIUM,HARD,none}
 [Table("WORDS")]
 public class Words
 {
@@ -49,4 +52,10 @@ public class SharedClass
 {
     public User SharedUser { get; set; } = new User(){Name = ""};
     public EGameMode GameMode { get; set; } = EGameMode.none;
+    public GuessrContext Context = new GuessrContext();
+    public int SavedScore { get; set; } = 0;
+    public int TimeSavedSec { get; set; } = 0;
+    public int RemainingTime { get; set; } = 0;
+    public int elapsedSavedTime { get; set; } = 0;
+    public bool playedAgain { get; set; } = false;
 }
